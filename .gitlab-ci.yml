@@ -17,7 +17,7 @@ build_schemalab-ui:
     - main
 
 test_schemalab-ui:
-  stage: build
+  stage: test
   script:
     - echo "Testing schemalab-ui..."
     - cd schemalab-ui
