@@ -1,0 +1,32 @@
+.toolbox {
+  width: 200px;
+  height: 100%;
+  background-color: #f4f4f4;
+  border-right: 1px solid #ddd;
+  padding: 10px;
+  box-sizing: border-box;
+  position: fixed;
+  overflow: hidden;
+  left: 0;
+  top: 0;
+}
+
+.toolbox h3 {
+  margin: 0 0 10px;
+  font-size: 18px;
+  text-align: center;
+}
+
+.toolbox-item {
+  padding: 10px;
+  margin-bottom: 10px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  text-align: center;
+  cursor: grab;
+}
+
+.toolbox-item:active {
+  cursor: grabbing;
+}
