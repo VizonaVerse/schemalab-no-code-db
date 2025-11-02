@@ -1,0 +1,24 @@
+.db-designer {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.toolbox {
+  width: 200px;
+  height: 100%;
+  background-color: #f4f4f4;
+  border-right: 1px solid #ddd;
+  padding: 10px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.canvas {
+  flex: 1; /* Takes up the remaining space not used by toolbox. */
+  height: 100%;
+  background-color: #eaeaea;
+  position: relative;
+  overflow: hidden;
+}
