@@ -20,8 +20,6 @@ test_schemalab-ui:
     - npm test
   only:
     - main
-  dependencies:
-    - build_schemalab-ui
 
 # deploy_schemalab-ui:
 #   stage: deploy
