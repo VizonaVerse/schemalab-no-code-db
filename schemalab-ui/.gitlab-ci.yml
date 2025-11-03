@@ -1,14 +1,17 @@
 stages:
-  - run
+  - build
   - test
-  - deploy
+  # - deploy
   
-run_schemalab-ui:
-  stage: run
+build_schemalab-ui:
+  stage: build
   script:
     - echo "Building schemalab-ui..."
     - npm install
-    - npm start
+    - npm run build
+  artifacts:
+    paths:
+      - dist/
   only:
     - main
 
@@ -20,6 +23,8 @@ test_schemalab-ui:
     - npm test
   only:
     - main
+  dependencies:
+    - build_schemalab-ui
 
 # deploy_schemalab-ui:
 #   stage: deploy
