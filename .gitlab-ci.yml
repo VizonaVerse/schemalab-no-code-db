@@ -1,39 +1,39 @@
 stages:
-  - build
-  - test
-  - deploy
+  - trigger
   
-build_schemalab-ui:
-  stage: build
-  script:
-    - echo "Building schemalab-ui..."
-    - cd schemalab-ui
-    - npm install
-    - npm run build
-  artifacts:
-    paths:
-      - schemalab-ui/dist/
-  only:
-    - main
+trigger_schemalab-ui:
+  stage: trigger
+  rules:
+    - changes:
+      - schemalab-ui/**
+  trigger:
+    include: schemalab-ui/.gitlab-ci.yml
+    strategy: depend
 
-test_schemalab-ui:
-  stage: test
-  script:
-    - echo "Testing schemalab-ui..."
-    - cd schemalab-ui
-    - npm install
-    - npm test
-  only:
-    - main
-  dependencies:
-    - build_schemalab-ui
+trigger_schema:
+  stage: trigger
+  rules:
+    - changes:
+      - schema/**
+  trigger:
+    include: schemalab-ui/.gitlab-ci.yml
+    strategy: depend
 
-deploy_schemalab-ui:
-  stage: deploy
-  script:
-    - echo "Deploying schemalab-ui..."
-    - cd schemalab-ui
-    - docker compose build
-    - docker compose up -d
-  only:
-    - main
+trigger_auth:
+  stage: trigger
+  rules:
+    - changes:
+      - auth/**
+  trigger:
+    include: schemalab-ui/.gitlab-ci.yml
+    strategy: depend
+
+trigger_management:
+  stage: trigger
+  rules:
+    - changes:
+      - management/**
+  trigger:
+    include: schemalab-ui/.gitlab-ci.yml
+    strategy: depend
+    

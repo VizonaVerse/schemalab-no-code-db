@@ -1,0 +1,33 @@
+stages:
+  - run
+  - test
+  - deploy
+  
+run_schemalab-ui:
+  stage: run
+  script:
+    - echo "Building schemalab-ui..."
+    - npm install
+    - npm start
+  only:
+    - main
+
+test_schemalab-ui:
+  stage: test
+  script:
+    - echo "Testing schemalab-ui..."
+    - npm install
+    - npm test
+  only:
+    - main
+  dependencies:
+    - build_schemalab-ui
+
+# deploy_schemalab-ui:
+#   stage: deploy
+#   script:
+#     - echo "Deploying schemalab-ui..."
+#     - docker compose build
+#     - docker compose up -d
+#   only:
+#     - main
