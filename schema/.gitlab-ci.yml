@@ -1,0 +1,11 @@
+stages:
+  - test
+
+test_schema-build:
+  stage: test
+  script:
+    - echo "Testing schema-build..."
+    - npm install
+    - npm test
+  only:
+    - main
