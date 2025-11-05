@@ -8,6 +8,7 @@ build_schemalab-ui:
   image: node:20
   script:
     - echo "Building schemalab-ui..."
+    - cd schemalab-ui
     - npm install
     - npm run build
   artifacts:
@@ -21,6 +22,7 @@ test_schemalab-ui:
   image: node:20
   script:
     - echo "Testing schemalab-ui..."
+    - cd schemalab-ui
     - npm install
     - npm test
   only:
