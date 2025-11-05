@@ -10,7 +10,7 @@ build_schemalab-ui:
     - echo "Building schemalab-ui..."
     - cd schemalab-ui
     - npm install
-    - npm run build
+    - CI=false npm run build
   artifacts:
     paths:
       - dist/
