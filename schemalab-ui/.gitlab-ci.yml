@@ -5,6 +5,7 @@ stages:
   
 build_schemalab-ui:
   stage: build
+  image: node:20
   script:
     - echo "Building schemalab-ui..."
     - npm install
@@ -17,6 +18,7 @@ build_schemalab-ui:
 
 test_schemalab-ui:
   stage: test
+  image: node:20
   script:
     - echo "Testing schemalab-ui..."
     - npm install
