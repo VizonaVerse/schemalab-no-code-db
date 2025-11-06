@@ -13,17 +13,20 @@ build_schemalab-ui:
     - CI=false npm run build
   artifacts:
     paths:
+      - node_modules/
       - dist/
+    expire_in: 1hs
   rules:
     - when: on_success
 
 test_schemalab-ui:
   stage: test
   image: node:20
+  dependencies:
+    - build_schemalab-ui
   script:
     - echo "Testing schemalab-ui..."
     - cd schemalab-ui
-    - npm install
     - npm test -- --passWithNoTests
   rules:
   - when: on_success
