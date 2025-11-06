@@ -70,7 +70,7 @@ const TableNode = ({ data }: { data: { label: string } }) => {
             position={Position.Left}
             id={`row-${rowIndex}-left`}
             style={{
-              top: `${rowIndex * rowHeight +58}px`, // Align to row center
+              top: `${rowIndex * rowHeight + 58}px`, // Align to row center
               left: "-5px", // Position to the left of the table
             }}
           />
@@ -121,7 +121,7 @@ const initialEdges = [
   { id: "e1-3", source: "1", sourceHandle: "row-2-left", target: "3", targetHandle: "row-0-right" },
 ];
 
-export function Canvas() {
+export function Canvas({ onDataExtract }: { onDataExtract: (nodes: any, edges: any) => void }) {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
@@ -132,8 +132,16 @@ export function Canvas() {
     [setEdges]
   );
 
+  const extractData = () => {
+    if (onDataExtract) {
+      onDataExtract(nodes, edges);
+    }
+  };
+
   return (
     <div className="canvas-container">
+      {/* Temporary button to trigger data extraction, for development purposes */}
+      <button onClick={extractData}>Extract Data</button>
       <ReactFlow
         nodes={nodes}
         edges={edges}
