@@ -14,8 +14,8 @@ build_schemalab-ui:
   artifacts:
     paths:
       - dist/
-  only:
-    - main
+  rules:
+    - when: on_success
 
 test_schemalab-ui:
   stage: test
@@ -25,10 +25,8 @@ test_schemalab-ui:
     - cd schemalab-ui
     - npm install
     - npm test -- --passWithNoTests
-  only:
-    - main
-  dependencies:
-    - build_schemalab-ui
+  rules:
+  - when: on_success
 
 # deploy_schemalab-ui:
 #   stage: deploy
