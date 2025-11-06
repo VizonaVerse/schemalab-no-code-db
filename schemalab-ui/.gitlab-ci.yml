@@ -24,7 +24,7 @@ test_schemalab-ui:
     - echo "Testing schemalab-ui..."
     - cd schemalab-ui
     - npm install
-    - npm test --passWithNoTests
+    - npm test -- --passWithNoTests
   only:
     - main
   dependencies:
