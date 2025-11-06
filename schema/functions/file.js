@@ -1,11 +1,10 @@
 const fs = require('fs');
 const sqlite3 = require('sqlite3');
-const filePath = '../tempFiles/';
-const timeToLive = 1000 * 60 * 10; // 10 mins
+const filePath = './tempFiles/';
 
-function generateFiles(sqlString, projectName) {
+async function generateFiles(sqlString, projectName, timeToLive = 1000 * 60 * 10) { // default to 10 mins
     // get nextID and increment
-    var info = JSON.parse(fs.readFileSync(`${filePath}fileInfo.json`, 'utf-8'));
+    var info = await JSON.parse(fs.readFileSync(`${filePath}fileInfo.json`, 'utf-8'));
     var id = info.nextID;
     info.nextID = info.nextID + 1;
 
@@ -16,17 +15,18 @@ function generateFiles(sqlString, projectName) {
         fileName: fileName,
         deleteTime: Date.now() + timeToLive
     })
-
+    
     // create new db
-    var newdb = new sqlite3.Database(`${filePath}${fileName}.db`, (err) => {
+    var newdb = new sqlite3.Database(`${filePath}${fileName}.db`, async (err) => {
         if (err) {
             console.log("Error creating sqlite file: " + err);
             throw "V00";
         }
-        // run the sql
-        try {
-            newdb.exec(sqlString, ()  => {runQueries(newdb)});
-        } catch (err){
+    });
+
+    // run the sql
+    newdb.exec(sqlString, async (err) => {
+        if (err) {
             console.log("Error inserting sqlite schema: " + err);
             throw "V01";
         }
@@ -34,11 +34,11 @@ function generateFiles(sqlString, projectName) {
     newdb.close();
     
     try {
-    // create sql file
-    fs.writeFileSync(`${filePath}${fileName}.sql`, sqlString);
+        // create sql file
+        fs.writeFileSync(`${filePath}${fileName}.sql`, sqlString);
 
-    // write to info file
-    fs.writeFileSync(`${filePath}fileInfo.json`, JSON.stringify(info));
+        // write to info file
+        fs.writeFileSync(`${filePath}fileInfo.json`, JSON.stringify(info));
     } catch (err) {
         console.log("Error writing to file: " + err);
         throw "F00";
@@ -47,17 +47,21 @@ function generateFiles(sqlString, projectName) {
     return fileName;
 }
 
-function deleteFiles() {
+async function deleteFiles() {
     // delete all files past the delete time specified in fileInfo
-    var info = JSON.parse(fs.readFileSync(`${filePath}fileInfo.json`, 'utf-8'));
+    var info = await JSON.parse(fs.readFileSync(`${filePath}fileInfo.json`, 'utf-8'));
     var keep = [];
     const date = Date.now();
     for (var item of info.deleteTimes) {
         if (item.deleteTime < date) {
             // delete files
             try {
-                fs.unlinkSync(`${filePath}${item.fileName}.db`)
-                fs.unlinkSync(`${filePath}${item.fileName}.sql`)
+                if (fs.existsSync(`${filePath}${item.fileName}.db`)) {
+                    fs.unlinkSync(`${filePath}${item.fileName}.db`)
+                }
+                if (fs.existsSync(`${filePath}${item.fileName}.sql`)) {
+                    fs.unlinkSync(`${filePath}${item.fileName}.sql`)
+                }
             } catch (err) {
                 console.log("Error deleting temp files: " + err);
                 throw "F00";
