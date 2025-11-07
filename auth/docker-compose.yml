@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:14-alpine
+    container_name: auth_db
+    environment:
+      - POSTGRES_USER=myuser
+      - POSTGRES_PASSWORD=mypassword
+      - POSTGRES_DB=auth_db
+    volumes:
+      # This line makes your database data persist even if you stop the container
+      - auth_db_data:/var/lib/postgresql/data
+    healthcheck:
+      # This checks if the database is ready to accept connections
+      test: ["CMD-SHELL", "pg_isready -U myuser -d auth_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  auth-service:
+    build: .  # Tells it to use the Dockerfile in the current directory
+    container_name: auth_service
+    command: python manage.py runserver 0.0.0.0:5050
+    #volumes:
+    #  - .:/app  # This maps your local code into the container for live-reloading
+
+    ports:
+      - "5050:5050"
+    environment:
+      - DB_HOST=db
+      - DB_NAME=auth_db
+      - DB_USER=myuser
+      - DB_PASSWORD=mypassword
+      - SECRET_KEY=your_super_secret_django_key_here # Change this!
+    depends_on:
+      db:
+        # This waits for the 'db' service to be healthy before starting
+        condition: service_healthy
+
+volumes:
+  auth_db_data:
