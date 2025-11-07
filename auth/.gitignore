@@ -6,7 +6,7 @@ __pycache__/
 venv/
 .venv/
 
-# Secrets (like your .env file)
+# Secrets 
 .env
 
 # Django database
