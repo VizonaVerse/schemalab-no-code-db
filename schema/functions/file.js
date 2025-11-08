@@ -3,6 +3,20 @@ const sqlite3 = require('sqlite3');
 const filePath = './tempFiles/';
 
 async function generateFiles(sqlString, projectName, timeToLive = 1000 * 60 * 10) { // default to 10 mins
+    // response object
+    var res = {
+        failed: false,
+        errorCode: "",
+        errorMessage: "",
+        fileName: ""
+    };
+
+    function sleep(ms) {
+    return new Promise((resolve) => {
+        setTimeout(resolve, ms);
+    });
+    }
+
     // get nextID and increment
     var info = await JSON.parse(fs.readFileSync(`${filePath}fileInfo.json`, 'utf-8'));
     var id = info.nextID;
@@ -17,22 +31,36 @@ async function generateFiles(sqlString, projectName, timeToLive = 1000 * 60 * 10
     })
     
     // create new db
-    var newdb = new sqlite3.Database(`${filePath}${fileName}.db`, async (err) => {
+    var newdb = new sqlite3.Database(`${filePath}${fileName}.db`, (err) => {
         if (err) {
-            console.log("Error creating sqlite file: " + err);
-            throw "V00";
+            res.failed = true;
+            res.errorCode = "V00";
+            res.errorMessage = err.message;
         }
     });
 
+    await sleep(500);
+    if (res.failed) return res;
+
     // run the sql
-    newdb.exec(sqlString, async (err) => {
+    newdb.exec(sqlString, (err) => {
         if (err) {
-            console.log("Error inserting sqlite schema: " + err);
-            throw "V01";
+            res.failed = true;
+            res.errorCode = "V01";
+            res.errorMessage = err.message;
         }
     });
     newdb.close();
-    
+
+    await sleep(500);
+    if (res.failed) {
+        // if it failed here the database must be deleted
+        if (fs.existsSync(`${filePath}${fileName}.db`)) {
+            fs.unlinkSync(`${filePath}${fileName}.db`)
+        }
+        return res;
+    }
+
     try {
         // create sql file
         fs.writeFileSync(`${filePath}${fileName}.sql`, sqlString);
@@ -40,11 +68,14 @@ async function generateFiles(sqlString, projectName, timeToLive = 1000 * 60 * 10
         // write to info file
         fs.writeFileSync(`${filePath}fileInfo.json`, JSON.stringify(info));
     } catch (err) {
-        console.log("Error writing to file: " + err);
-        throw "F00";
+        res.failed = true;
+        res.errorCode = "F00";
+        res.errorMessage = err.message;
+        return res;
     }
 
-    return fileName;
+    res.fileName = fileName;
+    return res;
 }
 
 async function deleteFiles() {
