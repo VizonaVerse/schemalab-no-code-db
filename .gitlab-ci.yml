@@ -24,14 +24,14 @@ trigger_schemalab-ui:
 #     include: schema/.gitlab-ci.yml
 #     strategy: depend
 
-# trigger_auth:
-#   stage: trigger
-#   rules:
-#     - changes:
-#       - auth/**
-#   trigger:
-#     include: auth/.gitlab-ci.yml
-#     strategy: depend
+trigger_auth:
+  stage: trigger
+  rules:
+    - changes:
+      - auth/**
+  trigger:
+    include: auth/.gitlab-ci.yml
+    strategy: depend
 
 # trigger_management:
 #   stage: trigger
