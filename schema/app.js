@@ -8,10 +8,12 @@ const port = process.env.PORT
 // example route (index.js file in routes)
 var indexRouter = require('./routes/index');
 // add new routes here
+var SQLRouter = require('./routes/build');
 
 // example route
 app.use('/', indexRouter);
 // add new routes here
+app.use('/build',build)
 
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
