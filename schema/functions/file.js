@@ -6,9 +6,10 @@ async function generateFiles(sqlString, projectName, timeToLive = 1000 * 60 * 10
     // response object
     var res = {
         failed: false,
-        errorCode: "",
-        errorMessage: "",
-        fileName: ""
+        code: "",
+        message: "",
+        fileName: "",
+        httpCode: 0
     };
 
     function sleep(ms) {
@@ -34,8 +35,9 @@ async function generateFiles(sqlString, projectName, timeToLive = 1000 * 60 * 10
     var newdb = new sqlite3.Database(`${filePath}${fileName}.db`, (err) => {
         if (err) {
             res.failed = true;
-            res.errorCode = "V00";
-            res.errorMessage = err.message;
+            res.code = "V00";
+            res.message = err.message;
+            res.httpCode = 500;
         }
     });
 
@@ -46,8 +48,9 @@ async function generateFiles(sqlString, projectName, timeToLive = 1000 * 60 * 10
     newdb.exec(sqlString, (err) => {
         if (err) {
             res.failed = true;
-            res.errorCode = "V01";
-            res.errorMessage = err.message;
+            res.code = "V01";
+            res.message = err.message;
+            res.httpCode = 400;
         }
     });
     newdb.close();
@@ -69,8 +72,9 @@ async function generateFiles(sqlString, projectName, timeToLive = 1000 * 60 * 10
         fs.writeFileSync(`${filePath}fileInfo.json`, JSON.stringify(info));
     } catch (err) {
         res.failed = true;
-        res.errorCode = "F00";
-        res.errorMessage = err.message;
+        res.code = "F00";
+        res.message = err.message;
+        res.httpCode = 500;
         return res;
     }
 
@@ -95,7 +99,7 @@ async function deleteFiles() {
                 }
             } catch (err) {
                 console.log("Error deleting temp files: " + err);
-                throw "F00";
+                throw {code: "F00", message: "Server Error", httpCode: 500};
             }
         } else {
             // add the item to the new array to be kept in fileInfo
@@ -107,7 +111,7 @@ async function deleteFiles() {
         fs.writeFileSync(`${filePath}fileInfo.json`, JSON.stringify(info));
     } catch (err) {
         console.log("Error writing to file: " + err);
-        throw "F00";
+        throw {code: "F00", message: "Server Error", httpCode: 500};
     }
 }
 
