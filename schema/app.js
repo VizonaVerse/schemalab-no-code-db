@@ -43,8 +43,8 @@ app.use(cookieParser());
 //   }
 // }));
 
-app.listen(port, () => {
+var server = app.listen(port, () => {
   console.log(`Schema-Build listening on port ${port}`)
 })
 
-module.exports = app;
+module.exports = {app, server};
