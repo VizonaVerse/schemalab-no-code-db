@@ -3,6 +3,7 @@ require('dotenv').config({ path: '.env' });
 
 const express = require('express')
 const app = express()
+app.use(express.json());
 const port = process.env.PORT
 
 // example route (index.js file in routes)
@@ -45,3 +46,5 @@ app.use(cookieParser());
 app.listen(port, () => {
   console.log(`Schema-Build listening on port ${port}`)
 })
+
+module.exports = app;
