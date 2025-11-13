@@ -4,16 +4,15 @@ var file = require('../functions/file.js');
 var sql = require('../functions/sql.js');
 var getDate = require('../functions/date.js');
 
-/* GET home page. */
- router.get('/', async function (req, res, next) {
+router.post('/', async (req, res, next) => {
     try {
-        const {data} = req.body;
-        const ProjectName = data.ProjectName
-        const canvas= data.canvas
-    }catch{
+        var {data} = req.body;
+        var ProjectName = data.projectName;
+        var canvas = data.canvas;
+    }catch (err){
         return res.status(400).json({
             code: 400,
-            message: 'ivalid Json format',
+            message: 'Invalid JSON format',
             errorCode: 'S00',
             data: {}, // can send back additional data later
             time: getDate(),
@@ -21,13 +20,12 @@ var getDate = require('../functions/date.js');
     }
 
     try {
-        const SqlString = await sql.generateSQL(canvas)
+        var SqlString = await sql.generateSQL(canvas)
     } catch {
         //CAtch Codes
     }
-    
     try {
-        const result = await file.deletefiles ()
+        var result = await file.deleteFiles()
     }catch(err) {
         return res.status(err.httpCode).json({
             code: err.httpCode,
@@ -37,10 +35,10 @@ var getDate = require('../functions/date.js');
             time: getDate(),
         });
     }
-
-    const result = await file.generateFiles (SqlString, ProjectName, ttl)
-    if (result.failed = True) 
-        if (result.code = "V00")
+    
+    var result = await file.generateFiles(SqlString, ProjectName, 0) // placeholder ttl value
+    if (result.failed == true) {
+        if (result.code == "V00") {
         return res.status(result.httpCode).json({
                 code: result.httpCode,
                 message: result.message,
@@ -48,7 +46,7 @@ var getDate = require('../functions/date.js');
                 data: {}, // can send back additional data later
                 time: getDate(),
             });
-        else if (result.code = "V01")
+        } else if (result.code == "V01") {
             return res.status(result.httpCode).json({
                 code: result.httpCode,
                 message: result.Message,
@@ -56,9 +54,10 @@ var getDate = require('../functions/date.js');
                 data: {}, // can send back additional data later
                 time: getDate(),
             });
+        }
+    }
     
-
-    return res.status(200)
+    return res.status(200).json({message:"hi"});
     // result has a thing called file name 
     //sending 2 file
     // (__filename.sql, __filename.db)
