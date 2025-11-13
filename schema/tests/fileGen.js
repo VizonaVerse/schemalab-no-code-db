@@ -1,3 +1,6 @@
+
+// -----TEST IS CURRENTLY EXCLUDED, RUN ROUTE TEST INSTEAD-----//
+
 const fs = require('fs');
 const filePath = './tempFiles/';
 const fileFunctions = require('../functions/file');
@@ -6,6 +9,8 @@ const { fail } = require('assert');
 describe("File generation tests", () => {
     
     beforeAll(async () => {
+        //await fileFunctions.deleteFiles();
+        //fs.writeFileSync(`${filePath}fileInfo.json`, JSON.stringify({"nextID":0,"deleteTimes":[]}));
     })
 
     test("Test database and sql file is generated + delete after", async () => {
@@ -14,7 +19,7 @@ describe("File generation tests", () => {
         var response = (await fileFunctions.generateFiles(exampleSQL, "TestProject", 0)); // timeToLive set to 0 for test
         if (response.failed) fail();
         var fileName = response.fileName;
-
+        console.log(fileName);
         var fileSQL = fs.readFileSync(`${filePath}${fileName}.sql`, 'utf-8');
         await expect(fileSQL).toBe(exampleSQL);
 
@@ -35,7 +40,7 @@ describe("File generation tests", () => {
         
         var response = await fileFunctions.generateFiles(invalidSQL, "TestProject", 0); // timeToLive set to 0 for test
         if (response.failed) {
-            return expect(response.errorCode).toBe("V01");
+            return expect(response.code).toBe("V01");
         }
         fail();
     });
