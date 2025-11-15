@@ -1,6 +1,7 @@
 async function validateFields(list) {
     // the list must contain objects that look like this:
     var example = {
+        name: "",
         type: "", // with parameters included
         constraints: [
             "" // with parameters included (separated by a space)
@@ -79,30 +80,30 @@ async function validateFields(list) {
                     paras = para.parameters;
                 }
             }
-            if (paras == 0) throw {code: "V03", field: field, message: "Data type has parameters when it shouldn't"};
+            if (paras == 0) throw {code: "V03", httpCode: 400, field: field, message: "Data type has parameters when it shouldn't"};
             if (paras == 1) {
                 if (split1.length == 2) {
                     var isNotNumber = isNaN(split1[1].replace(")", ""));
                     if (isNotNumber) {
-                        throw {code: "V04", field: field, message: "Invlid parameter or parameter length"}; // Invlid parameter or parameter length
+                        throw {code: "V04", httpCode: 400, field: field, message: "Invlid parameter or parameter length"}; // Invlid parameter or parameter length
                     }
                 } else {
-                    throw {code: "V02", field: field, message: "Invlid parameter format"}; // (CHANGE TO SERVER ERROR IF FRONTEND HAS OWN FORMAT)
+                    throw {code: "V02", httpCode: 500, field: field, message: "Invlid parameter format"}; // (CHANGE TO SERVER ERROR IF FRONTEND HAS OWN FORMAT)
                 }
             }
             if (paras == 2) {
                 if (split1.length == 2) {
                     var split2 = split1[1].replace(")", "").replaceAll(" ", "").split(",")
-                    if (split2.length != 2) throw {code: "V04", field: field, message: "Invlid parameter or parameter length"}; // Invlid parameter or parameter length
-                    if (isNaN(split2[0])) throw {code: "V04", field: field, message: "Invlid parameter or parameter length"};
-                    if (isNaN(split2[1])) throw {code: "V04", field: field, message: "Invlid parameter or parameter length"};
+                    if (split2.length != 2) throw {code: "V04", httpCode: 400, field: field, message: "Invlid parameter or parameter length"}; // Invlid parameter or parameter length
+                    if (isNaN(split2[0])) throw {code: "V04", httpCode: 400, field: field, message: "Invlid parameter or parameter length"};
+                    if (isNaN(split2[1])) throw {code: "V04", httpCode: 400, field: field, message: "Invlid parameter or parameter length"};
                 } else {
-                    throw {code: "V02", field: field, message: "Invlid parameter format"}; // (CHANGE TO SERVER ERROR IF FRONTEND HAS OWN FORMAT)
+                    throw {code: "V02", httpCode: 500, field: field, message: "Invlid parameter format"}; // (CHANGE TO SERVER ERROR IF FRONTEND HAS OWN FORMAT)
                 }
             }
         }
         if (! validTypes.includes(type)) {
-            throw {code: "V05", field: field, message: "Invlid data type"};
+            throw {code: "V05", httpCode: 400, field: field, message: "Invlid data type"};
         }
 
         for (var constr of field.constraints) {
@@ -110,7 +111,7 @@ async function validateFields(list) {
             if (! validConstraints.includes(constr)) {
                 // does it have parameters?
                 var split1 = constr.split(" ", 2);
-                if (! validParaConstraints.includes(split1[0])) throw {code: "V06", field: field, message: "Invlid constraint"};
+                if (! validParaConstraints.includes(split1[0])) throw {code: "V06", httpCode: 400, field: field, message: "Invlid constraint"};
             }
         }
     }

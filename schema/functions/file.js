@@ -36,7 +36,7 @@ async function generateFiles(sqlString, projectName, timeToLive = 1000 * 60 * 10
         if (err) {
             res.failed = true;
             res.code = "V00";
-            res.message = err.message;
+            res.message = "Server Error";
             res.httpCode = 500;
         }
     });
@@ -49,7 +49,7 @@ async function generateFiles(sqlString, projectName, timeToLive = 1000 * 60 * 10
         if (err) {
             res.failed = true;
             res.code = "V01";
-            res.message = err.message;
+            res.message = "Got sql error when inserting the schema: " + err.message;
             res.httpCode = 400;
         }
     });
@@ -73,7 +73,7 @@ async function generateFiles(sqlString, projectName, timeToLive = 1000 * 60 * 10
     } catch (err) {
         res.failed = true;
         res.code = "F00";
-        res.message = err.message;
+        res.message = "Server Error";
         res.httpCode = 500;
         return res;
     }
