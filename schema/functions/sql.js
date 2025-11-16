@@ -1,3 +1,5 @@
+const valFunctions = require('../functions/validation');
+
 async function generateSQL(canvas) {
     try {
         var relationships = canvas.relationships;
@@ -28,6 +30,7 @@ async function generateSQL(canvas) {
     }
     
     // insert all relationships into the tables
+    var interTables = [] // extra manyToMany tables
     for (var rel of relationships) {
         try {
             var source = rel.source;
@@ -59,18 +62,82 @@ async function generateSQL(canvas) {
                     }
                 }
             }
+        } else if (type == "manyToManyEdge") {
+            // create new table with references to that table
+            var inter = {
+                tableName1:"",
+                rowName1: "",
+                rowType1: "",
+                tableName2:"",
+                rowName2: "",
+                rowType2: ""
+            }
+            for (var i = 0; i < tables.length; i++) {
+                if (tables[i].id == source) {
+                    inter.tableName1 = tables[i].name;
+                    inter.rowName1 = tables[i].data.tableData[sourceRow][0]; // 0 is subject to FRONTEND FORMAT
+                    inter.rowType1 = tables[i].data.tableData[sourceRow][1]; // 1 is subject to FRONTEND FORMAT
+                }
+            }
+            for (var i = 0; i < tables.length; i++) {
+                if (tables[i].id == target) {
+                    inter.tableName2 = tables[i].name;
+                    inter.rowName2 = tables[i].data.tableData[targetRow][0]; // 0 is subject to FRONTEND FORMAT
+                    inter.rowType2 = tables[i].data.tableData[targetRow][1]; // 1 is subject to FRONTEND FORMAT
+                }
+            }
+            interTables.push(inter);
         }
     }
 
-    return "CREATE TABLE test(id int, name varchar(225));"; // placeholder sql
-}
+    // generate each table's string individually with validation
+    var sqlString = "";
+    for (var table of tables) {
+        var fieldList = [];
+        var fKeys = []
+        var tableString = `CREATE TABLE ${table.name}(`;
 
+        for (var field of table.data.tableData) {
+            // PLACEHOLDER: CONVERT FRONTEND FORMAT TO MY FORMAT
+            // Put primary keys into the fields
+            // Put forign keys in the fKeys array
+        }
 
+        // validate fields, any problems are thrown straight back to the route
+        valFunctions.validateFields(fieldList);
+        
+        // my format to sql
+        for (var field of fieldList) {
+            tableString += `${field.name} ${field.type}`;
+            for (var constr of field.constraints) {
+                tableString += `${constr}`;
+            }
+            tableString += ", ";
+        }
 
-async function createTable(table) {
-    for (var row of table.data.tableData) {
+        // add in forign key
+        for (var key in fKeys) {
+            tableString += `FOREIGN KEY (${key.row}) REFERENCES ${key.tableREF}(${key.rowREF}), `;
+        }
+        tableString = tableString.substring(0, tableString.length - 2) + ");";
 
+        sqlString += tableString + " ";
     }
+
+    // add inter tables
+    for (var inter of interTables) {
+        var tableString = "";
+        tableString += `CREATE TABLE ${inter.tableName1}_${inter.tableName1}_connector(`
+        tableString += `${inter.rowName1} ${inter.rowType1}, ${inter.rowName2} ${inter.rowType2}, PRIMARY KEY(${inter.rowName2}, ${inter.rowName2}), `
+        tableString += `FOREIGN KEY(${inter.rowName1}) REFERENCES ${inter.tableName1}(${inter.rowName1}), `
+        tableString += `FOREIGN KEY(${inter.rowName2}) REFERENCES ${inter.tableName2}(${inter.rowName2}));`
+        sqlString += tableString + " ";
+    }
+    
+
+    return "CREATE TABLE test(id int, name varchar(225));"; // placeholder sql
+    return sqlString; // actual return
 }
+
 
 module.exports = {generateSQL};
