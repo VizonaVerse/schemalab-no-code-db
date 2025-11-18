@@ -58,14 +58,15 @@ async function validateFields(list) {
         "NOT NULL",
         "UNIQUE",
         "PRIMARY KEY",
-        "FOREIGN KEY"
+        "AUTOINCREMENT"
     ]
 
     const validParaConstraints = [
-        "CHECK", // needs parameter
         "DEFAULT" // needs parameter
     ]
 
+    var hasPK = false;
+    var hasAI = false;
     // validation process
     for (var field of list) {
         var type = field.type.toUpperCase();
@@ -85,20 +86,20 @@ async function validateFields(list) {
                 if (split1.length == 2) {
                     var isNotNumber = isNaN(split1[1].replace(")", ""));
                     if (isNotNumber) {
-                        throw {code: "V04", httpCode: 400, field: field, message: "Invlid parameter or parameter length"}; // Invlid parameter or parameter length
+                        throw {code: "V04", httpCode: 400, field: field, message: "Invlid parameter or parameter length"};
                     }
                 } else {
-                    throw {code: "V02", httpCode: 500, field: field, message: "Invlid parameter format"}; // (CHANGE TO SERVER ERROR IF FRONTEND HAS OWN FORMAT)
+                    throw {code: "V02", httpCode: 500, field: field, message: "Invlid parameter format"};
                 }
             }
             if (paras == 2) {
                 if (split1.length == 2) {
                     var split2 = split1[1].replace(")", "").replaceAll(" ", "").split(",")
-                    if (split2.length != 2) throw {code: "V04", httpCode: 400, field: field, message: "Invlid parameter or parameter length"}; // Invlid parameter or parameter length
+                    if (split2.length != 2) throw {code: "V04", httpCode: 400, field: field, message: "Invlid parameter or parameter length"};
                     if (isNaN(split2[0])) throw {code: "V04", httpCode: 400, field: field, message: "Invlid parameter or parameter length"};
                     if (isNaN(split2[1])) throw {code: "V04", httpCode: 400, field: field, message: "Invlid parameter or parameter length"};
                 } else {
-                    throw {code: "V02", httpCode: 500, field: field, message: "Invlid parameter format"}; // (CHANGE TO SERVER ERROR IF FRONTEND HAS OWN FORMAT)
+                    throw {code: "V02", httpCode: 500, field: field, message: "Invlid parameter format"};
                 }
             }
         }
@@ -112,6 +113,14 @@ async function validateFields(list) {
                 // does it have parameters?
                 var split1 = constr.split(" ", 2);
                 if (! validParaConstraints.includes(split1[0])) throw {code: "V06", httpCode: 400, field: field, message: "Invlid constraint"};
+            }
+            if (constr == "PRIMARY KEY") {
+                if (hasPK) throw {code: "V07", httpCode: 400, field: field, message: "More than one PRIMARY KEY in a table"};
+                hasPK = true;
+            }
+            if (constr == "AUTOINCREMENT") {
+                if (hasAI) throw {code: "V07", httpCode: 400, field: field, message: "More than one AUTOINCREMENT in a table"};
+                hasAI = true;
             }
         }
     }
