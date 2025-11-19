@@ -68,7 +68,14 @@ async function validateFields(list) {
     var hasPK = false;
     var hasAI = false;
     // validation process
-    for (var field of list) {
+    for (var i = 0; i < list.length; i++) {
+        var field = list[i]
+        var err = {fieldID: i, fieldName: field.name};
+        // is the name a duplicate?
+        for (var j = 0; j < list.length; j++) {
+            if (i != j && field.name == list[j].name) throw {code: "V09", httpCode: 400, data: {fieldID: null, fieldName: field.name}, message: "Duplicate field names"};
+        }
+
         var type = field.type.toUpperCase();
         // does it contain a parameter?
         if (type.includes("(") && type.includes(")")) {
@@ -81,30 +88,30 @@ async function validateFields(list) {
                     paras = para.parameters;
                 }
             }
-            if (paras == 0) throw {code: "V03", httpCode: 400, field: field, message: "Data type has parameters when it shouldn't"};
+            if (paras == 0) throw {code: "V03", httpCode: 400, data: err, message: "Data type has parameters when it shouldn't"};
             if (paras == 1) {
                 if (split1.length == 2) {
                     var isNotNumber = isNaN(split1[1].replace(")", ""));
                     if (isNotNumber) {
-                        throw {code: "V04", httpCode: 400, field: field, message: "Invlid parameter or parameter length"};
+                        throw {code: "V04", httpCode: 400, data: err, message: "Invlid parameter or parameter length"};
                     }
                 } else {
-                    throw {code: "V02", httpCode: 500, field: field, message: "Invlid parameter format"};
+                    throw {code: "V02", httpCode: 500, data: err, message: "Invlid parameter format"};
                 }
             }
             if (paras == 2) {
                 if (split1.length == 2) {
                     var split2 = split1[1].replace(")", "").replaceAll(" ", "").split(",")
-                    if (split2.length != 2) throw {code: "V04", httpCode: 400, field: field, message: "Invlid parameter or parameter length"};
-                    if (isNaN(split2[0])) throw {code: "V04", httpCode: 400, field: field, message: "Invlid parameter or parameter length"};
-                    if (isNaN(split2[1])) throw {code: "V04", httpCode: 400, field: field, message: "Invlid parameter or parameter length"};
+                    if (split2.length != 2) throw {code: "V04", httpCode: 400, data: err, message: "Invlid parameter or parameter length"};
+                    if (isNaN(split2[0])) throw {code: "V04", httpCode: 400, data: err, message: "Invlid parameter or parameter length"};
+                    if (isNaN(split2[1])) throw {code: "V04", httpCode: 400, data: err, message: "Invlid parameter or parameter length"};
                 } else {
-                    throw {code: "V02", httpCode: 500, field: field, message: "Invlid parameter format"};
+                    throw {code: "V02", httpCode: 500, data: err, message: "Invlid parameter format"};
                 }
             }
         }
         if (! validTypes.includes(type)) {
-            throw {code: "V05", httpCode: 400, field: field, message: "Invlid data type"};
+            throw {code: "V05", httpCode: 400, data: err, message: "Invlid data type"};
         }
 
         for (var constr of field.constraints) {
@@ -112,14 +119,14 @@ async function validateFields(list) {
             if (! validConstraints.includes(constr)) {
                 // does it have parameters?
                 var split1 = constr.split(" ", 2);
-                if (! validParaConstraints.includes(split1[0])) throw {code: "V06", httpCode: 400, field: field, message: "Invlid constraint"};
+                if (! validParaConstraints.includes(split1[0])) throw {code: "V06", httpCode: 400, data: err, message: "Invlid constraint"};
             }
             if (constr == "PRIMARY KEY") {
-                if (hasPK) throw {code: "V07", httpCode: 400, field: field, message: "More than one PRIMARY KEY in a table"};
+                if (hasPK) throw {code: "V07", httpCode: 400, data: err, message: "More than one PRIMARY KEY in a table"};
                 hasPK = true;
             }
             if (constr == "AUTOINCREMENT") {
-                if (hasAI) throw {code: "V07", httpCode: 400, field: field, message: "More than one AUTOINCREMENT in a table"};
+                if (hasAI) throw {code: "V07", httpCode: 400, data: err, message: "More than one AUTOINCREMENT in a table"};
                 hasAI = true;
             }
         }
@@ -127,4 +134,19 @@ async function validateFields(list) {
     return "success";
 }
 
-module.exports = {validateFields};
+async function validateTables(tables) {
+    // check for duplicate table names
+    for (var i = 0; i < tables.length; i++) {
+        for (var j = 0; j < tables.length; j++) {
+            if (i != j && tables[i].name == tables[j].name) throw {
+                code: "V09",
+                httpCode: 400,
+                data: {fieldID: null, fieldName: null, tableID: null, tableName: tables[i].name},
+                message: "Duplicate table names"
+            };
+        }
+    }
+    return "success";
+}
+
+module.exports = {validateFields, validateTables};
