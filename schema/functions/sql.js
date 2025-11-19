@@ -7,6 +7,8 @@ async function generateSQL(canvas) {
     } catch {
         throw {code: "S00", httpCode: 400, message: "Invalid JSON format"};
     }
+    // table validation
+    await valFunctions.validateTables(tables);
 
     // give all table data a relations array to add to later
     try {
@@ -127,8 +129,14 @@ async function generateSQL(canvas) {
             });
         }
 
-        // validate fields, any problems are thrown straight back to the route
-        valFunctions.validateFields(fieldList);
+        // validate fields
+        try {
+            await valFunctions.validateFields(fieldList);
+        } catch (err) {
+            err.tableID = table.id;
+            err.tableName = table.name;
+            throw err;
+        }
         
         // my format to sql
         for (var field of fieldList) {
@@ -147,18 +155,27 @@ async function generateSQL(canvas) {
 
         sqlString += tableString + " ";
     }
-    sqlString = sqlString.substring(0, sqlString.length - 1);
 
     // add inter tables
     for (var inter of interTables) {
+        // check if the first 3 digits of each name is unique
+        var name1 = inter.tableName1.substring(0, 3);
+        var name2 = inter.tableName2.substring(0, 3);
+        if (name1 == name2) {
+            name1 += "1";
+            name2 += "2";
+        }
+
         var tableString = "";
-        tableString += `CREATE TABLE ${inter.tableName1}_${inter.tableName1}_connector(`
-        tableString += `${inter.rowName1} ${inter.rowType1}, ${inter.rowName2} ${inter.rowType2}, PRIMARY KEY(${inter.rowName2}, ${inter.rowName2}), `
-        tableString += `FOREIGN KEY(${inter.rowName1}) REFERENCES ${inter.tableName1}(${inter.rowName1}), `
-        tableString += `FOREIGN KEY(${inter.rowName2}) REFERENCES ${inter.tableName2}(${inter.rowName2}));`
+        tableString += `CREATE TABLE ${name1}_${name2}_connector(`
+        tableString += `${name1}_${inter.rowName1} ${inter.rowType1}, `
+        tableString += `${name2}_${inter.rowName2} ${inter.rowType2}, `
+        tableString += `PRIMARY KEY(${name1}_${inter.rowName1}, ${name2}_${inter.rowName2}), `
+        tableString += `FOREIGN KEY(${name1}_${inter.rowName1}) REFERENCES ${inter.tableName1}(${inter.rowName1}), `
+        tableString += `FOREIGN KEY(${name2}_${inter.rowName2}) REFERENCES ${inter.tableName2}(${inter.rowName2}));`
         sqlString += tableString + " ";
     }
-    
+    sqlString = sqlString.substring(0, sqlString.length - 1);
 
     //return "CREATE TABLE test(id int, name varchar(225));"; // placeholder sql
     return sqlString; // actual return
