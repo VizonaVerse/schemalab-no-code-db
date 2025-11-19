@@ -1,21 +1,64 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 class RegisterSerializer(serializers.ModelSerializer):
-    """
-    A serializer for registering a new user.
-    """
+    first_name = serializers.CharField(required=True)
+    last_name = serializers.CharField(required=True)
+    
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'password')
-        # Make the password "write-only" - it won't be sent back in the response
-        extra_kwargs = {'password': {'write_only': True}}
+        fields = ('id', 'email', 'password', 'first_name', 'last_name')
+        extra_kwargs = {
+            'password': {'write_only': True},
+            'email': {'required': True} # Enforce email is required
+        }
+
+    def validate_email(self, value):
+        # Check if email already exists
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("A user with this email already exists.")
+        return value
 
     def create(self, validated_data):
-        # This automatically hashes the password.
         user = User.objects.create_user(
-            username=validated_data['username'],
+            username=validated_data['email'], 
             email=validated_data['email'],
-            password=validated_data['password']
+            password=validated_data['password'],
+            first_name=validated_data['first_name'],
+            last_name=validated_data['last_name']
         )
         return user
+
+class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+    email = serializers.CharField(required=True) 
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        self.fields.pop('username', None)
+
+    def validate(self, attrs):
+        # Map the received 'email' value back to the internal 'username' key
+        attrs['username'] = attrs.get('email') 
+        
+        data = super().validate(attrs)
+
+        first_name = getattr(self.user, 'first_name', '')
+        last_name = getattr(self.user, 'last_name', '')
+
+        data['name'] = f"{first_name} {last_name}".strip()
+        data['admin'] = self.user.is_staff
+        
+        return data
+    
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        token['name'] = f"{user.first_name} {user.last_name}"
+        token['admin'] = user.is_staff
+
+        return token
