@@ -10,6 +10,11 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
+from django.contrib.auth import get_user_model
+from .serializers import PasswordResetRequestSerializer, PasswordResetConfirmSerializer
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.contrib.auth.tokens import default_token_generator
 
 class RegisterView(generics.CreateAPIView):
     """
@@ -56,3 +61,75 @@ class LogoutView(APIView):
         
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
+
+class PasswordResetRequestView(APIView):
+    """
+    Handles the request for a password reset link (POST /password-reset/).
+    """
+    permission_classes = (AllowAny,)
+    serializer_class = PasswordResetRequestSerializer # Only needed for documentation, but good practice
+
+    def post(self, request):
+        User = get_user_model()
+        serializer = PasswordResetRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data['email']
+        
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            # Return 200 OK even if the user doesn't exist for security reasons,
+            # to prevent enumeration of existing user emails.
+            return Response({'message': 'Password reset link sent (if user exists).'}, 
+                            status=status.HTTP_200_OK)
+
+        # 1. Generate the secure token and UID
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        token = default_token_generator.make_token(user)
+
+        # 2. Construct the reset link (for testing)
+        # NOTE: You will need to change 'http://localhost:8080/reset/' to the actual frontend path
+        reset_link = f"http://localhost:8080/reset/{uid}/{token}/"
+        
+        # 3. Print the link to the console for the developer to test
+        print("-" * 50)
+        print(f"PASSWORD RESET LINK FOR {user.email}:")
+        print(reset_link)
+        print("-" * 50)
+        
+        return Response({'message': 'Password reset link sent.'}, 
+                        status=status.HTTP_200_OK)
+    
+class PasswordResetConfirmView(APIView):
+    """
+    Handles confirming the password reset (POST /password-reset/confirm/).
+    """
+    permission_classes = (AllowAny,)
+
+    def post(self, request):
+        User = get_user_model()
+        serializer = PasswordResetConfirmSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        uidb64 = serializer.validated_data['uidb64']
+        token = serializer.validated_data['token']
+        new_password = serializer.validated_data['new_password']
+
+        try:
+            # 1. Decode the user ID (UID) from the link
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = User.objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            user = None
+
+        # 2. Check if the user exists and if the token is valid
+        if user is not None and default_token_generator.check_token(user, token):
+            # 3. Token is valid! Set the new password and save.
+            user.set_password(new_password)
+            user.save()
+            return Response({'message': 'Password reset successful.'}, 
+                            status=status.HTTP_200_OK)
+        else:
+            # 4. Token is invalid or expired
+            return Response({'error': 'Invalid reset link or token has expired.'}, 
+                            status=status.HTTP_400_BAD_REQUEST)
