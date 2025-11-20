@@ -81,3 +81,13 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
     new_password = serializers.CharField(required=True, min_length=6) # Add strong password validation here
     uidb64 = serializers.CharField(required=True)
     token = serializers.CharField(required=True)
+
+class PasswordChangeSerializer(serializers.Serializer):
+    old_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True, min_length=6)
+
+    def validate_new_password(self, value):
+        # can add more complex validation here later (e.g., regex checks)
+        if len(value) < 6:
+            raise serializers.ValidationError("New password must be at least 6 characters long.")
+        return value
