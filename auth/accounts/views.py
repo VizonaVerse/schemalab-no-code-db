@@ -11,7 +11,7 @@ from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.contrib.auth import get_user_model
-from .serializers import PasswordResetRequestSerializer, PasswordResetConfirmSerializer
+from .serializers import PasswordResetRequestSerializer, PasswordResetConfirmSerializer, PasswordChangeSerializer
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.contrib.auth.tokens import default_token_generator
@@ -133,3 +133,28 @@ class PasswordResetConfirmView(APIView):
             # 4. Token is invalid or expired
             return Response({'error': 'Invalid reset link or token has expired.'}, 
                             status=status.HTTP_400_BAD_REQUEST)
+        
+class PasswordChangeView(APIView):
+    """
+    Handles changing the password for an authenticated user.
+    """
+    permission_classes = [IsAuthenticated] 
+    serializer_class = PasswordChangeSerializer
+
+    def post(self, request):
+        user = request.user 
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        old_password = serializer.validated_data['old_password']
+        new_password = serializer.validated_data['new_password']
+
+        if not user.check_password(old_password):
+            return Response({'error': 'Old password is not correct.'}, 
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        user.set_password(new_password)
+        user.save()
+        
+        return Response({'message': 'Password updated successfully.'}, 
+                        status=status.HTTP_200_OK)
