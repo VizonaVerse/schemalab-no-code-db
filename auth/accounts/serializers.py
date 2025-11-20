@@ -62,3 +62,22 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         token['admin'] = user.is_staff
 
         return token
+    
+class PasswordResetRequestSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+    
+    def validate_email(self, value):
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        
+        # Check if a user with this email exists
+        if not User.objects.filter(email=value).exists():
+            raise serializers.ValidationError(
+                "No user is registered with this email address."
+            )
+        return value
+    
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    new_password = serializers.CharField(required=True, min_length=6) # Add strong password validation here
+    uidb64 = serializers.CharField(required=True)
+    token = serializers.CharField(required=True)
