@@ -12,7 +12,7 @@ from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.contrib.auth import get_user_model
-from .serializers import PasswordResetRequestSerializer, PasswordResetConfirmSerializer, PasswordChangeSerializer
+from .serializers import PasswordResetRequestSerializer, PasswordResetConfirmSerializer, PasswordChangeSerializer, UserUpdateSerializer
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.contrib.auth.tokens import default_token_generator
@@ -176,3 +176,27 @@ class PasswordChangeView(APIView):
         
         return Response({'message': 'Password updated successfully.'}, 
                         status=status.HTTP_200_OK)
+    
+class ProfileView(APIView):
+    """
+    A protected endpoint to view and update the current user's profile.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        data = {
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'first_name': user.first_name, 
+            'last_name': user.last_name,
+        }
+        return Response(data)
+
+    def patch(self, request):
+        serializer = UserUpdateSerializer(request.user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        
+        return Response(serializer.data, status=status.HTTP_200_OK)
