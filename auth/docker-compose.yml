@@ -30,7 +30,15 @@ services:
       - DB_NAME=auth_db
       - DB_USER=myuser
       - DB_PASSWORD=mypassword
-      - SECRET_KEY=your_super_secret_django_key_here 
+
+      - EMAIL_HOST=smtp-relay.brevo.com
+      - EMAIL_PORT=587 
+      - EMAIL_USER=9c4025001@smtp-brevo.com
+      - EMAIL_PASSWORD=pxRmvH7IyJZ6QTOj
+      - DEFAULT_FROM_EMAIL=email@example.com # We would need an actual domain to send email through SMTP
+      
+      - SECRET_KEY=your_super_secret_django_key_here
+
     depends_on:
       db:
         condition: service_healthy
