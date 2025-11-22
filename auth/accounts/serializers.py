@@ -42,7 +42,6 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         self.fields.pop('username', None)
 
     def validate(self, attrs):
-        # Map the received 'email' value back to the internal 'username' key
         attrs['username'] = attrs.get('email') 
         
         data = super().validate(attrs)
@@ -91,3 +90,16 @@ class PasswordChangeSerializer(serializers.Serializer):
         if len(value) < 6:
             raise serializers.ValidationError("New password must be at least 6 characters long.")
         return value
+    
+    class UserUpdateSerializer(serializers.ModelSerializer):
+        email = serializers.EmailField(required=False, allow_blank=True)
+
+        class Meta:
+            model = User
+            fields = ['first_name', 'last_name', 'email']
+
+        def validate_email(self, value):
+            # Ensure the new email doesn't belong to another user
+            if User.objects.filter(email=value).exclude(pk=self.instance.pk).exists():
+                raise serializers.ValidationError("This email is already in use by another account.")
+            return value
