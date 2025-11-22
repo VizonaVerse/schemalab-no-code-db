@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.shortcuts import render
 from django.contrib.auth.models import User
 from rest_framework import generics
@@ -15,6 +16,7 @@ from .serializers import PasswordResetRequestSerializer, PasswordResetConfirmSer
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
 
 class RegisterView(generics.CreateAPIView):
     """
@@ -88,17 +90,33 @@ class PasswordResetRequestView(APIView):
         token = default_token_generator.make_token(user)
 
         # 2. Construct the reset link (for testing)
-        # NOTE: You will need to change 'http://localhost:8080/reset/' to the actual frontend path
         reset_link = f"http://localhost:8080/reset/{uid}/{token}/"
         
         # 3. Print the link to the console for the developer to test
-        print("-" * 50)
-        print(f"PASSWORD RESET LINK FOR {user.email}:")
-        print(reset_link)
-        print("-" * 50)
-        
-        return Response({'message': 'Password reset link sent.'}, 
+        subject = 'Password Reset Request for Your Account'
+        message = (
+            f"You requested a password reset. Please click the link below to set a new password:\n\n"
+            f"{reset_link}\n\n"
+            f"If you did not request this, please ignore this email."
+        )
+        recipient_list = [user.email]
+
+        try:
+            send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, recipient_list, fail_silently=False)
+            message_text = 'Password reset link sent.'
+        except Exception as e:
+            # Optional: Log the error if the email service failed
+            print(f"ERROR: Could not send email. Exception: {e}")
+            message_text = 'Password reset link sent (but failed to connect to email service).'
+
+
+        return Response({'message': message_text}, 
                         status=status.HTTP_200_OK)
+
+        # print("-" * 50)
+        # print(f"PASSWORD RESET LINK FOR {user.email}:")
+        # print(reset_link)
+        # print("-" * 50)
     
 class PasswordResetConfirmView(APIView):
     """
