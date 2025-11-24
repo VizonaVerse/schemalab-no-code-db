@@ -16,6 +16,18 @@ app.use('/', indexRouter);
 // add new routes here
 app.use('/build', buildRouter)
 
+app.get('/tempFiles/:filename', (req, res) => {
+    const filename = req.params.filename;
+    const fullPath = path.join(__dirname, 'tempFiles', filename);
+
+    res.download(fullPath, filename, (err) => {
+        if (err) {
+            console.error("Download error:", err);
+            res.status(404).json({ message: "File not found" });
+        }
+    });
+});
+
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 
