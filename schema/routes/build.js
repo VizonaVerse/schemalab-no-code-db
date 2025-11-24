@@ -57,10 +57,22 @@ router.post('/', async (req, res, next) => {
         }
     }
     
-    return res.status(200).json({message:"hi"});
-    // result has a thing called file name 
-    //sending 2 file
-    // (__filename.sql, __filename.db)
+   // Absolute paths to files
+    const sqlPath = `${filePath}${result.fileName}.sql`;
+    const dbPath = `${filePath}${result.fileName}.db`;
+
+    // Send both file names to the client (frontend will request them later)
+    // tempFiles is currently a holder want to confim where exactly it is
+    return res.status(200).json({
+        code: 200,
+        message: "Files ready for download",
+        data: {
+            sqlFile: `/tempFiles/${result.__filename}.sql`,
+            dbFile: `/tempFiles/${result.__filename}.db`,
+        },
+        time: getDate(),
+    });
+
 });
 
 module.exports = router;

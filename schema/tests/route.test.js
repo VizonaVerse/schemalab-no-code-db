@@ -21,7 +21,30 @@ describe("Schema Route tests", () => {
                 canvas: {}
             }
         });
-        return await expect(res.status).toBe(200);
+        // Status OK
+        expect(res.status).toBe(200);
+
+        // Response has file info
+        expect(res.body).toHaveProperty("sqlFile");
+        expect(res.body).toHaveProperty("dbFile");
+
+        const { sqlFile, dbFile } = res.body;
+
+        // Basic shape check (optional but nice)
+        expect(sqlFile).toMatch(/\/download\/.+\.sql$/);
+        expect(dbFile).toMatch(/\/download\/.+\.db$/);
+
+        // Check the SQL file is downloadable
+        const sqlRes = await agent.get(sqlFile);
+        expect(sqlRes.status).toBe(200);
+        expect(sqlRes.header["content-disposition"]).toMatch(/attachment/);
+        expect(sqlRes.header["content-disposition"]).toMatch(/\.sql/);
+
+        // Check the DB file is downloadable
+        const dbRes = await agent.get(dbFile);
+        expect(dbRes.status).toBe(200);
+        expect(dbRes.header["content-disposition"]).toMatch(/attachment/);
+        expect(dbRes.header["content-disposition"]).toMatch(/\.db/);
     });
 
     afterAll(async () => {
