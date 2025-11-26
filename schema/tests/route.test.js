@@ -17,68 +17,71 @@ describe("Schema Route tests", () => {
         const res = await agent.post("/build").send({
             //send a data object 
             data: {
-            relationships: [
-                {
-                    "id": "el-1",
-                    "source": "3",
-                    "sourceHandle": "row-0-left",
-                    "target": "1",
-                    "targetHandle": "row-0-right",
-                    "type": "manyToManyEdge"
-                },
-                {
-                    "id": "el-2",
-                    "source": "2",
-                    "sourceHandle": "row-0-left",
-                    "target": "1",
-                    "targetHandle": "row-3-right",
-                    "type": "oneToManyEdge"
+                projectName: "name",
+                canvas: {
+                    relationships: [
+                        {
+                            "id": "el-1",
+                            "source": "3",
+                            "sourceHandle": "row-0-left",
+                            "target": "1",
+                            "targetHandle": "row-0-right",
+                            "type": "manyToManyEdge"
+                        },
+                        {
+                            "id": "el-2",
+                            "source": "2",
+                            "sourceHandle": "row-0-left",
+                            "target": "1",
+                            "targetHandle": "row-3-right",
+                            "type": "oneToManyEdge"
+                        }
+                    ],
+                    tables: [
+                        {
+                            id: "1",
+                            name: "Students",
+                            position: {x:100,y:100},
+                            data: ["id", "name", "age", "School_id"],
+                            attributes: [
+                                {ai: true, default: "", nn: false, pk: true, type: "INT", unique: false},
+                                {ai: false, default: "", nn: true, pk: false, type: "VARCHAR(20)", unique: false},
+                                {ai: false, default: "18", nn: false, pk: false, type: "INT", unique: false},
+                                {ai: false, default: "", nn: false, pk: false, type: "INT", unique: false}
+                            ]
+                        },
+                        {
+                            id: "2",
+                            name: "School",
+                            position: {x:100,y:100},
+                            data: ["id", "name"],
+                            attributes: [
+                                {ai: true, default: "", nn: false, pk: true, type: "INT", unique: false},
+                                {ai: false, default: "", nn: true, pk: false, type: "VARCHAR(20)", unique: false}
+                            ]
+                        },
+                        {
+                            id: "3",
+                            name: "Course",
+                            position: {x:100,y:100},
+                            data: ["id", "name"],
+                            attributes: [
+                                {ai: true, default: "", nn: false, pk: true, type: "INT", unique: false},
+                                {ai: false, default: "", nn: true, pk: false, type: "VARCHAR(20)", unique: true}
+                            ]
+                        }
+                    ]
                 }
-            ],
-            tables: [
-                {
-                    id: "1",
-                    name: "Students",
-                    position: {x:100,y:100},
-                    data: ["id", "name", "age", "School_id"],
-                    attributes: [
-                        {ai: true, default: "", nn: false, pk: true, type: "INT", unique: false},
-                        {ai: false, default: "", nn: true, pk: false, type: "VARCHAR(20)", unique: false},
-                        {ai: false, default: "18", nn: false, pk: false, type: "INT", unique: false},
-                        {ai: false, default: "", nn: false, pk: false, type: "INT", unique: false}
-                    ]
-                },
-                {
-                    id: "2",
-                    name: "School",
-                    position: {x:100,y:100},
-                    data: ["id", "name"],
-                    attributes: [
-                        {ai: true, default: "", nn: false, pk: true, type: "INT", unique: false},
-                        {ai: false, default: "", nn: true, pk: false, type: "VARCHAR(20)", unique: false}
-                    ]
-                },
-                {
-                    id: "3",
-                    name: "Course",
-                    position: {x:100,y:100},
-                    data: ["id", "name"],
-                    attributes: [
-                        {ai: true, default: "", nn: false, pk: true, type: "INT", unique: false},
-                        {ai: false, default: "", nn: true, pk: false, type: "VARCHAR(20)", unique: true}
-                    ]
-                }
-            ]
-        }
+            }
         });
         // Status OK
         expect(res.status).toBe(200);
 
         // Response has file info
-        expect(res.body).toHaveProperty("sqlFile");
-        expect(res.body).toHaveProperty("dbFile");
+        expect(res.body.data).toHaveProperty("sqlFile");
+        expect(res.body.data).toHaveProperty("dbFile");
 
-        const { sqlFile, dbFile } = res.body;
+        const { sqlFile, dbFile } = res.body.data;
 
         // Basic shape check (optional but nice)
         expect(sqlFile).toMatch(/\/download\/.+\.sql$/);
