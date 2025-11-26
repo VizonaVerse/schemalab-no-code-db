@@ -49,7 +49,7 @@ router.post('/', async (req, res, next) => {
         } else if (result.code == "V01") {
             return res.status(result.httpCode).json({
                 code: result.httpCode,
-                message: result.Message,
+                message: result.message,
                 errorCode: result.code,
                 data: {}, // can send back additional data later
                 time: getDate(),
@@ -58,8 +58,8 @@ router.post('/', async (req, res, next) => {
     }
     
    // Absolute paths to files
-    const sqlPath = `${filePath}${result.fileName}.sql`;
-    const dbPath = `${filePath}${result.fileName}.db`;
+    //const sqlPath = `${filePath}${result.fileName}.sql`;
+    //const dbPath = `${filePath}${result.fileName}.db`;
 
     // Send both file names to the client (frontend will request them later)
     // tempFiles is currently a holder want to confim where exactly it is

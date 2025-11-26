@@ -58,7 +58,7 @@ async function validateFields(list) {
         "NOT NULL",
         "UNIQUE",
         "PRIMARY KEY",
-        "AUTOINCREMENT"
+        "AUTO INCREMENT"
     ]
 
     const validParaConstraints = [
