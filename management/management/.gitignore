@@ -1,0 +1,1 @@
+Add-Content -Path .\management\.gitignore -Value "media/" 
