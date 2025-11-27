@@ -3,6 +3,7 @@ const {app,server} = require("../app");
 const fs = require('fs');
 const filePath = './tempFiles/';
 const fileFunctions = require('../functions/file');
+const { pathToFileURL } = require("url");
 
 let agent;
 
@@ -14,7 +15,7 @@ describe("Schema Route tests", () => {
     });
 
     test("Test build route", async () => {
-        const res = await agent.post("/build").send({
+        const res = await agent.post("/build/build").send({
             //send a data object 
             data: {
                 projectName: "name",
@@ -76,29 +77,30 @@ describe("Schema Route tests", () => {
         });
         // Status OK
         expect(res.status).toBe(200);
-
-        // Response has file info
-        expect(res.body.data).toHaveProperty("sqlFile");
-        expect(res.body.data).toHaveProperty("dbFile");
-
-        const { sqlFile, dbFile } = res.body.data;
-
-        // Basic shape check (optional but nice)
-        expect(sqlFile).toMatch(/\/download\/.+\.sql$/);
-        expect(dbFile).toMatch(/\/download\/.+\.db$/);
-
-        // Check the SQL file is downloadable
-        const sqlRes = await agent.get(sqlFile);
-        expect(sqlRes.status).toBe(200);
-        expect(sqlRes.header["content-disposition"]).toMatch(/attachment/);
-        expect(sqlRes.header["content-disposition"]).toMatch(/\.sql/);
-
-        // Check the DB file is downloadable
-        const dbRes = await agent.get(dbFile);
-        expect(dbRes.status).toBe(200);
-        expect(dbRes.header["content-disposition"]).toMatch(/attachment/);
-        expect(dbRes.header["content-disposition"]).toMatch(/\.db/);
     });
+
+    test("Test build route", async () => {
+        const res = await agent.post("/build/DBBuild")
+        // Status OK
+
+        const pathToFile = './tempFiles/';
+        const fileName = "name.db";
+        res.download(pathToFile, fileName, (err) => {
+            expect(err).toBe(False);
+});
+    });
+
+    test("Test build route", async () => {
+        const res = await agent.post("/build/SQLBuild")
+        // Status OK
+
+        const pathToFile = './tempFiles/';
+        const fileName = "name.sql";
+        res.download(pathToFile, fileName, (err) => {
+            expect(err).toBe(False);
+});
+    });
+
 
     afterAll(async () => {
         server.close();
