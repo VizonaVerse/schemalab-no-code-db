@@ -3,17 +3,18 @@ var router = express.Router();
 var file = require('../functions/file.js');
 var sql = require('../functions/sql.js');
 var getDate = require('../functions/date.js');
+var Filename = "";
 
-router.post('/', async (req, res, next) => {
+router.post('/build', async (req, res, next) => {
     try {
         var {data} = req.body;
         var ProjectName = data.projectName;
         var canvas = data.canvas;
     }catch (err){
         return res.status(400).json({
-            code: 400,
-            message: 'Invalid JSON format',
-            errorCode: 'S00',
+            code: err.code,
+            message: err.message,
+            errorCode: err.httpCode,
             data: {}, // can send back additional data later
             time: getDate(),
         });
@@ -21,8 +22,14 @@ router.post('/', async (req, res, next) => {
 
     try {
         var SqlString = await sql.generateSQL(canvas)
-    } catch {
-        //CAtch Codes
+    } catch(err) {
+        return res.status(err.httpCode).json({
+            code: err.httpCode,
+            message: err.message,
+            errorCode: err.code,
+            data: {}, // can send back additional data later
+            time: getDate(),
+        });
     }
     try {
         var result = await file.deleteFiles()
@@ -55,24 +62,66 @@ router.post('/', async (req, res, next) => {
                 time: getDate(),
             });
         }
+    } else {
+        Filename = result.fileName
     }
-    
-   // Absolute paths to files
-    //const sqlPath = `${filePath}${result.fileName}.sql`;
-    //const dbPath = `${filePath}${result.fileName}.db`;
 
-    // Send both file names to the client (frontend will request them later)
-    // tempFiles is currently a holder want to confim where exactly it is
-    return res.status(200).json({
-        code: 200,
-        message: "Files ready for download",
-        data: {
-            sqlFile: `/tempFiles/${result.__filename}.sql`,
-            dbFile: `/tempFiles/${result.__filename}.db`,
-        },
-        time: getDate(),
+    return res.status(400)
+
+});
+
+router.post('/DBBuild', async (req, res, next) => {
+    const options = {
+        root: path.join('./tempFiles/')
+    };
+
+    File = FileName + ".db";
+    res.sendFile(file, options, function (err) {
+        if (err) {
+            return res.status(400).json({
+                code: 400,
+                message: "Error sending Files",
+                errorCode: "F00",
+                data: {}, // can send back additional data later
+                time: getDate(),
+            });
+        } else {
+            return res.status(200).json({
+                code: 200,
+                message: "File Sent Successfully",
+                errorCode: "",
+                data: {}, // can send back additional data later
+                time: getDate(),
+            });
+        }
     });
+});
 
+router.post('/SQLBuild', async (req, res, next) => {
+    const options = {
+        root: path.join('./tempFiles/')
+    };
+
+    File = FileName + ".sql";
+    res.sendFile(file, options, function (err) {
+        if (err) {
+            return res.status(400).json({
+                code: 400,
+                message: "Error sending Files",
+                errorCode: "F00",
+                data: {}, // can send back additional data later
+                time: getDate(),
+            });
+        } else {
+            return res.status(200).json({
+                code: 200,
+                message: "File Sent Successfully",
+                errorCode: "",
+                data: {}, // can send back additional data later
+                time: getDate(),
+            });
+        }
+    });
 });
 
 module.exports = router;
