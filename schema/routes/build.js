@@ -3,9 +3,9 @@ var router = express.Router();
 var file = require('../functions/file.js');
 var sql = require('../functions/sql.js');
 var getDate = require('../functions/date.js');
-var Filename = "";
+var path = require('path');
 
-router.post('/build', async (req, res, next) => {
+router.post('/', async (req, res, next) => {
     try {
         var {data} = req.body;
         var ProjectName = data.projectName;
@@ -27,7 +27,7 @@ router.post('/build', async (req, res, next) => {
             code: err.httpCode,
             message: err.message,
             errorCode: err.code,
-            data: {}, // can send back additional data later
+            data: err.data,
             time: getDate(),
         });
     }
@@ -62,66 +62,52 @@ router.post('/build', async (req, res, next) => {
                 time: getDate(),
             });
         }
-    } else {
-        Filename = result.fileName
     }
 
-    return res.status(400)
+    return res.status(200).json({
+        code: 200,
+        message: "Files generated successfully",
+        errorCode: "",
+        data: {fileName: result.fileName},
+        time: getDate()
+    })
 
 });
 
-router.post('/DBBuild', async (req, res, next) => {
-    const options = {
-        root: path.join('./tempFiles/')
-    };
-
-    File = FileName + ".db";
-    res.sendFile(file, options, function (err) {
+router.get('/DB', async (req, res, next) => {
+    var {data} = req.body
+    
+    file = path.resolve("tempFiles/" + data.fileName + ".db");
+    res.sendFile(file, function (err) {
         if (err) {
             return res.status(400).json({
                 code: 400,
                 message: "Error sending Files",
                 errorCode: "F00",
-                data: {}, // can send back additional data later
-                time: getDate(),
-            });
-        } else {
-            return res.status(200).json({
-                code: 200,
-                message: "File Sent Successfully",
-                errorCode: "",
-                data: {}, // can send back additional data later
+                data: err, // can send back additional data later
                 time: getDate(),
             });
         }
     });
+    res.status(200);
 });
 
-router.post('/SQLBuild', async (req, res, next) => {
-    const options = {
-        root: path.join('./tempFiles/')
-    };
-
-    File = FileName + ".sql";
-    res.sendFile(file, options, function (err) {
+router.get('/SQL', async (req, res, next) => {
+    var {data} = req.body
+    
+    file = path.resolve("tempFiles/" + data.fileName + ".sql");
+    res.sendFile(file, function (err) {
         if (err) {
             return res.status(400).json({
                 code: 400,
                 message: "Error sending Files",
                 errorCode: "F00",
-                data: {}, // can send back additional data later
-                time: getDate(),
-            });
-        } else {
-            return res.status(200).json({
-                code: 200,
-                message: "File Sent Successfully",
-                errorCode: "",
-                data: {}, // can send back additional data later
+                data: err, // can send back additional data later
                 time: getDate(),
             });
         }
     });
+    res.status(200);
 });
 
 module.exports = router;

@@ -15,7 +15,7 @@ describe("Schema Route tests", () => {
     });
 
     test("Test build route", async () => {
-        const res = await agent.post("/build/build").send({
+        var res = await agent.post("/build").send({
             //send a data object 
             data: {
                 projectName: "name",
@@ -77,30 +77,14 @@ describe("Schema Route tests", () => {
         });
         // Status OK
         expect(res.status).toBe(200);
+        var fileName = res.body.data.fileName;
+
+        res = await agent.get("/build/DB").send({data:{fileName: fileName}})
+        expect(res.status).toBe(200);
+
+        res = await agent.get("/build/SQL").send({data:{fileName: fileName}})
+        expect(res.status).toBe(200);
     });
-
-    test("Test build route", async () => {
-        const res = await agent.post("/build/DBBuild")
-        // Status OK
-
-        const pathToFile = './tempFiles/';
-        const fileName = "name.db";
-        res.download(pathToFile, fileName, (err) => {
-            expect(err).toBe(False);
-});
-    });
-
-    test("Test build route", async () => {
-        const res = await agent.post("/build/SQLBuild")
-        // Status OK
-
-        const pathToFile = './tempFiles/';
-        const fileName = "name.sql";
-        res.download(pathToFile, fileName, (err) => {
-            expect(err).toBe(False);
-});
-    });
-
 
     afterAll(async () => {
         server.close();
