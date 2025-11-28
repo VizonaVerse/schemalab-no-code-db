@@ -1,161 +1,141 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useState, useMemo } from "react";
 import ReactFlow, {
   addEdge,
   Background,
   Controls,
-  useNodesState,
-  useEdgesState,
   Connection,
   Edge,
   Node,
-  Handle,
-  Position,
+  OnEdgesChange,
+  MiniMap,
+  ReactFlowInstance,
 } from "reactflow";
+import { EdgeMarkers } from "../elements/relationships/leftMarkerEdge";
 import "reactflow/dist/style.css";
 import "./canvas.css"; // Import styles for the table nodes
+import { TableNode } from "../elements/tableNode/table-node";
+import { ManyToManyEdge } from "../elements/relationships/M2M";
+import { OneToManyEdge } from "../elements/relationships/O2M";
+import { OneToOneEdge } from "../elements/relationships/O2O";
+import { EdgeMenu } from "./edgeMenu";
+import { useCanvasContext } from "../../../contexts/canvas-context";
 
-// Define the custom table node component.
-const TableNode = ({ data }: { data: { label: string } }) => {
-  const rowHeight = 23; // Define the height of each row
-  const [tableName, setTableName] = useState(data.label); // Editable table name
-  const [tableData, setTableData] = useState(
-    Array.from({ length: 6 }).map(() => ["", ""]) // Initialize 6 rows with empty strings
-  );
-
-  // Make table names editable by double-clicking.
-  const handleDoubleClickTableName = () => {
-    const newName = prompt("Edit table name:", tableName);
-    if (newName !== null) {
-      setTableName(newName);
-    }
-  };
-  // Make cell names editable by double-clicking.
-  const handleDoubleClickCell = (rowIndex: number, colIndex: number) => {
-    const newValue = prompt("Edit cell value:", tableData[rowIndex][colIndex]);
-    if (newValue !== null) {
-      const updatedTable = [...tableData];
-      updatedTable[rowIndex][colIndex] = newValue;
-      setTableData(updatedTable);
-    }
-  };
-
-  return (
-    <div className="table-node">
-      <h4 className="table-title" onDoubleClick={handleDoubleClickTableName}>
-        {tableName}
-      </h4>
-      <table className="table-content">
-        <tbody>
-          {tableData.map((row, rowIndex) => (
-            <tr key={rowIndex}>
-              <td>
-                <span onDoubleClick={() => handleDoubleClickCell(rowIndex, 0)}>
-                  {row[0] || "Empty"}
-                </span>
-              </td>
-              <td>
-                <span onDoubleClick={() => handleDoubleClickCell(rowIndex, 1)}>
-                  {row[1] || "Empty"}
-                </span>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      {/* Add Handles at the root level */}
-      {tableData.map((_, rowIndex) => (
-        <React.Fragment key={rowIndex}>
-          <Handle
-            type="source"
-            position={Position.Left}
-            id={`row-${rowIndex}-left`}
-            style={{
-              top: `${rowIndex * rowHeight + 58}px`, // Align to row center
-              left: "-5px", // Position to the left of the table
-            }}
-          />
-          <Handle
-            type="target"
-            position={Position.Right}
-            id={`row-${rowIndex}-right`}
-            style={{
-              top: `${rowIndex * rowHeight + 58}px`, // Align to row center
-              right: "-5px", // Position to the right of the table
-            }}
-          />
-        </React.Fragment>
-      ))}
-    </div>
-  );
+// Define the custom edge types outside the component
+const edgeTypes = {
+  manyToManyEdge: ManyToManyEdge,
+  oneToManyEdge: OneToManyEdge,
+  oneToOneEdge: OneToOneEdge,
 };
 
-// Define the custom node types.
-const nodeTypes = {
-  tableNode: TableNode,
-};
+export function Canvas() {
+  const { projectName, nodes, setNodes, edges, setEdges, onNodesChange, viewport, setViewport, setSelectedNodes, contextHolder, selectedEdge, setSelectedEdge, menuPos, setMenuPos } = useCanvasContext();
+  const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null);
 
-// Initial tables with the custom table node type.
-const initialNodes: Node[] = [
-  {
-    id: "1",
-    type: "tableNode",
-    data: { label: "Table 1" },
-    position: { x: 250, y: 0 },
-  },
-  {
-    id: "2",
-    type: "tableNode",
-    data: { label: "Table 2" },
-    position: { x: 100, y: 100 },
-  },
-  {
-    id: "3",
-    type: "tableNode",
-    data: { label: "Table 3" },
-    position: { x: 400, y: 100 },
-  },
-];
-// Initial edges connect table rows.
-const initialEdges = [
-  { id: "e1-2", source: "1", sourceHandle: "row-0-left", target: "2", targetHandle: "row-1-right" },
-  { id: "e1-3", source: "1", sourceHandle: "row-2-left", target: "3", targetHandle: "row-0-right" },
-];
+  const onInit = (instance: ReactFlowInstance) => {
+    setRfInstance(instance);
 
-export function Canvas({ onDataExtract }: { onDataExtract: (nodes: any, edges: any) => void }) {
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+    if (viewport) {
+      instance.setViewport(viewport, { duration: 0 });
+    } else {
+      instance.fitView({ padding: 1, duration: 0 });
+    }
+  }
 
-  const onConnect = useCallback(
-    (params: Connection | Edge) => {
-      setEdges((eds) => addEdge(params, eds));
+  // Define updateNodeData before using it in useMemo
+  const updateNodeData = useCallback(
+    (id: string, newData: { label?: string; tableData?: string[][]; rowMeta?: any[]; dataModeRows?: string[][] }) => {
+      setNodes((nds) =>
+        nds.map((node) =>
+          node.id === id ? { ...node, data: { ...node.data, ...newData } } : node
+        )
+      );
+    },
+    [setNodes]
+  );
+
+  // Memoize nodeTypes to avoid recreating it on every render
+  const nodeTypes = useMemo(
+    () => ({
+      tableNode: (props: any) => <TableNode {...props} updateNodeData={updateNodeData} />,
+    }),
+    [updateNodeData]
+  );
+
+  // const onNodeClick = (_: any, node: Node | null) => {
+  //   setSelectedNodes([node]);
+  // }
+
+  // Wrapper for onEdgesChange
+  const onEdgesChange: OnEdgesChange = useCallback(
+    (changes) => {
+      setEdges((eds) =>
+        changes.reduce((acc, change) => {
+          switch (change.type) {
+            case "add":
+              return [...acc, change.item];
+            case "remove":
+              return acc.filter((edge) => edge.id !== change.id);
+            default:
+              return acc;
+          }
+        }, eds)
+      );
     },
     [setEdges]
   );
 
-  const extractData = () => {
-    if (onDataExtract) {
-      onDataExtract(nodes, edges);
-    }
+  const onEdgeClick = (event: React.MouseEvent, edge: Edge) => {
+    setSelectedEdge(edge);
+    setMenuPos({ x: event.clientX, y: event.clientY });
   };
 
+  const updateEdgeType = (newType: string) => {
+    setEdges((eds) =>
+      eds.map((e) => (e.id === selectedEdge!.id ? { ...e, type: newType } : e))
+    );
+    setSelectedEdge(null);
+    setMenuPos(null);
+  };
+
+  const onConnect = useCallback(
+    (params: Connection | Edge) => {
+      setEdges((eds) => addEdge({
+        ...params,
+        type: "oneToOneEdge",
+      },
+        eds));
+    },
+    [setEdges]
+  );
+
   return (
-    <div className="canvas-container">
-      {/* Temporary button to trigger data extraction, for development purposes */}
-      <button onClick={extractData}>Extract Data</button>
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        fitView
-        nodeTypes={nodeTypes} // Register the custom node type
-      >
-        <Background />
-        <Controls />
-      </ReactFlow>
-    </div>
+    <>
+      { contextHolder }
+      <div className="canvas-container">
+        <EdgeMarkers />
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={onNodesChange} // Use the context's onNodesChange
+          onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          nodeTypes={nodeTypes} // Use memoized nodeTypes
+          edgeTypes={edgeTypes}
+          onEdgeClick={onEdgeClick}
+          onInit={onInit}
+          onSelectionChange={({nodes}) => setSelectedNodes(nodes)}
+          onPaneClick={() => {setSelectedNodes([]); setSelectedEdge(null) }}
+
+          onMove={(_, viewport) => setViewport(viewport)}
+        >
+          <MiniMap nodeStrokeWidth={3} />
+          <Background />
+          <Controls />
+        </ReactFlow>
+      </div>
+      {selectedEdge && menuPos && (
+        <EdgeMenu menuPos={menuPos} updateEdgeType={updateEdgeType} />
+      )}
+    </>
   );
 }
-
-export default Canvas;
