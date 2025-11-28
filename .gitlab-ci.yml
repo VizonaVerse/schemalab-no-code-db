@@ -16,17 +16,17 @@ trigger_schema:
     - changes:
       - schema/**
   trigger:
-    include: schemalab-ui/.gitlab-ci.yml
+    include: schema/.gitlab-ci.yml
     strategy: depend
 
-trigger_auth:
-  stage: trigger
-  rules:
-    - changes:
-      - auth/**
-  trigger:
-    include: schemalab-ui/.gitlab-ci.yml
-    strategy: depend
+#trigger_auth:
+#  stage: trigger
+#  rules:
+#    - changes:
+#      - auth/**
+#  trigger:
+#    include: schemalab-ui/.gitlab-ci.yml
+#    strategy: depend
 
 trigger_management:
   stage: trigger
@@ -34,6 +34,6 @@ trigger_management:
     - changes:
       - management/**
   trigger:
-    include: schemalab-ui/.gitlab-ci.yml
+    include: management/.gitlab-ci.yml
     strategy: depend
     
