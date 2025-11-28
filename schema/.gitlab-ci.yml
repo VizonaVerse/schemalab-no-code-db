@@ -1,0 +1,13 @@
+stages:
+  - test
+
+test_schema-build:
+  stage: test
+  image: node:20
+  script:
+    - echo "Testing schema-build..."
+    - cd schema
+    - npm install
+    - npm test
+  rules:
+    - when: on_success

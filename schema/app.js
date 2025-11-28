@@ -1,19 +1,35 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
-var session = require('express-session');
+//var session = require('express-session');
+require('dotenv').config({ path: '.env' });
 
-require('dotenv').config();
+const express = require('express')
+const app = express()
+app.use(express.json());
+const port = process.env.PORT
 
 // example route (index.js file in routes)
 var indexRouter = require('./routes/index');
 // add new routes here
+var buildRouter = require('./routes/build');
 
-var app = express();
+// example route
+app.use('/', indexRouter);
+// add new routes here
+app.use('/build', buildRouter)
+
+app.get('/tempFiles/:filename', (req, res) => {
+    const filename = req.params.filename;
+    const fullPath = path.join(__dirname, 'tempFiles', filename);
+
+    res.download(fullPath, filename, (err) => {
+        if (err) {
+            console.error("Download error:", err);
+            res.status(404).json({ message: "File not found" });
+        }
+    });
+});
 
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 
 const corsOptions = {
   origin: process.env.FRONT_END_URL, // Allow only specific origin
@@ -39,35 +55,8 @@ app.use(cookieParser());
 //   }
 // }));
 
-// view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'jade');
-app.set('port', process.env.PORT);
+var server = app.listen(port, () => {
+  console.log(`Schema-Build listening on port ${port}`)
+})
 
-app.use(logger('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(express.static(path.join(__dirname, 'public')));
-
-// example route
-app.use('/', indexRouter);
-// add new routes here
-
-
-// catch 404 and forward to error handler
-app.use(function (req, res, next) {
-  next(createError(404));
-});
-
-// error handler
-app.use(function (err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
-
-  // render the error page
-  res.status(err.status || 500);
-  res.render('error');
-});
-
-module.exports = app;
+module.exports = {app, server};
