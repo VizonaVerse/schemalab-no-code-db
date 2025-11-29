@@ -17,12 +17,13 @@ export interface TopBarProps {
 }
 
 export const Topbar = ({ projectName }: TopBarProps) => {
-    const { mode, setMode, handleCanvasData, nodes, setNodes, deleteSelectedNodes, copySelectedNodes, pasteNodes } = useCanvasContext();
+    const { mode, setMode, handleCanvasData, nodes, setNodes, deleteSelectedNodes, copySelectedNodes, pasteNodes, setProjectName } = useCanvasContext();
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [inputName, setInputName] = useState("");
+    const [inputName, setInputName] = useState(projectName); // <-- Use context value
     const [inputDescription, setInputDescription] = useState("");
 
     const handleSaveClick = () => {
+        setInputName(projectName); // <-- Reset to current name when opening modal
         setIsModalOpen(true);
     };
 
@@ -35,6 +36,7 @@ export const Topbar = ({ projectName }: TopBarProps) => {
                 description: inputDescription,
                 data: formattedData,
             });
+            setProjectName(inputName || "Untitled Project"); // <-- Always pass a string
             message.success("Canvas data saved successfully!");
             setIsModalOpen(false);
         } catch (error: any) {
@@ -168,7 +170,10 @@ export const Topbar = ({ projectName }: TopBarProps) => {
                     placeholder="Project Name (alphanumeric, max 20 chars)"
                     maxLength={20}
                     value={inputName}
-                    onChange={e => setInputName(e.target.value)}
+                    onChange={e => {
+                        setInputName(e.target.value);
+                        setProjectName(e.target.value); // <-- Update context immediately
+                    }}
                     style={{ marginBottom: 12 }}
                 />
                 <Input

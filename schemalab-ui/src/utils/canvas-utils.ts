@@ -1,7 +1,7 @@
-export function formatCanvasData(nodes: any[], edges: any[]) {
+export function formatCanvasData(nodes: any[], edges: any[], projectName: string) {
     return {
         data: {
-            projectName: "name", // Replace "name" with the actual project name if available
+            projectName: projectName, // Use the project name
             canvas: {
                 tables: nodes.map((node) => ({
                     id: node.id,

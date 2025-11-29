@@ -8,6 +8,7 @@ type Mode = "build" | "data";
 
 export interface CanvasContextType {
     projectName: string;
+    setProjectName: (name: string) => void; // <-- Add this line
     mode: Mode;
     setMode: (mode: Mode) => void;
     nodes: Node[];
@@ -153,12 +154,12 @@ export const CanvasProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     // Callback to receive data from Canvas
     const handleCanvasData = useCallback(() => {
-        const formattedData = formatCanvasData(nodes, edges); // Format the data
+        const formattedData = formatCanvasData(nodes, edges, projectName);
         setCanvasData(formattedData); // Store the formatted data in state
         // change this later on to send request to schema maker
         console.log("Formatted Canvas Data:", formattedData); // Log or send the data
         return formattedData;
-    }, [nodes, edges]);
+    }, [nodes, edges, projectName]);
 
     const onNodesChange: OnNodesChange = (changes) => {
         setNodes((nds) => applyNodeChanges(changes, nds));
@@ -229,7 +230,32 @@ export const CanvasProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
 
     return (
-        <CanvasContext.Provider value={{ projectName, mode, setMode, nodes, setNodes, edges, setEdges, onNodesChange, handleCanvasData, viewport, setViewport, updateNodeData, selectedNodes, selectedEdge, setSelectedNodes, setSelectedEdge, deleteSelectedNodes, contextHolder, menuPos, setMenuPos, deleteSelectedEdge, copySelectedNodes, pasteNodes }}>
+        <CanvasContext.Provider value={{
+            projectName,
+            setProjectName,
+            mode,
+            setMode,
+            nodes,
+            setNodes,
+            edges,
+            setEdges,
+            onNodesChange,
+            handleCanvasData,
+            viewport,
+            setViewport,
+            updateNodeData,
+            selectedNodes,
+            selectedEdge,
+            setSelectedNodes,
+            setSelectedEdge,
+            deleteSelectedNodes,
+            contextHolder,
+            menuPos,
+            setMenuPos,
+            deleteSelectedEdge,
+            copySelectedNodes,
+            pasteNodes
+        }}>
             {children}
         </CanvasContext.Provider>
     );
