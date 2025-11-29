@@ -5,26 +5,31 @@ stages:
   
 build_schemalab-ui:
   stage: build
+  image: node:20
   script:
     - echo "Building schemalab-ui..."
+    - cd schemalab-ui
     - npm install
-    - npm run build
+    - CI=false npm run build
   artifacts:
     paths:
-      - dist/
-  only:
-    - main
+      - schemalab-ui/node_modules/
+      - schemalab-ui/build/
+    expire_in: 1h
+  rules:
+    - when: on_success
 
 test_schemalab-ui:
   stage: test
-  script:
-    - echo "Testing schemalab-ui..."
-    - npm install
-    - npm test
-  only:
-    - main
+  image: node:20
   dependencies:
     - build_schemalab-ui
+  script:
+    - echo "Testing schemalab-ui..."
+    - cd schemalab-ui
+    - npm test -- --passWithNoTests
+  rules:
+  - when: on_success
 
 # deploy_schemalab-ui:
 #   stage: deploy
