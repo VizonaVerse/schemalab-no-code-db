@@ -72,17 +72,12 @@
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.12s ease;
+  transition: box-shadow 0.12s ease, background 0.12s ease; // Only transition safe properties
   text-transform: uppercase;
   letter-spacing: 0.5px;
 
   &:hover {
-    transform: translateY(-1px);
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
-  }
-
-  &:active {
-    transform: translateY(0);
   }
 }
 
@@ -99,12 +94,10 @@
   text-transform: none;
   box-shadow: 0 1px 0 rgba(16,24,40,0.03);
   cursor: pointer;
-  transition: background 0.12s ease, transform 0.12s ease;
-  white-space: nowrap;
+  transition: background 0.12s ease; // Remove transform from transition
 
   &:hover {
     background: #d1d5db; /* slightly darker on hover */
-    transform: translateY(-1px);
   }
 }
 
@@ -281,4 +274,9 @@
   &:hover {
     background-color: #8bc9a6;
   }
+}
+
+.table-node button:hover,
+.attr-button:hover {
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
 }
