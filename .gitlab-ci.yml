@@ -1,10 +1,9 @@
 workflow:
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    - when: never
+      when: never
     
-    - if: $CI_COMMIT_BRANCH
-      when: always
+    - when: always
 
 stages:
   - trigger
@@ -31,7 +30,7 @@ trigger_auth:
   stage: trigger
   rules:
     - changes:
-      - auth/**
+      - auth/**/*
   trigger:
     include: auth/.gitlab-ci.yml
     strategy: depend
