@@ -1,0 +1,152 @@
+async function validateFields(list) {
+    // the list must contain objects that look like this:
+    var example = {
+        name: "",
+        type: "", // with parameters included
+        constraints: [
+            "" // with parameters included (separated by a space)
+        ]
+    }
+    const validTypes = [
+        "INT",
+        "INTEGER",
+        "TINYINT",
+        "SMALLINT",
+        "MEDIUMINT",
+        "BIGINT",
+        "INT2",
+        "INT8",
+        "DECIMAL", // has 2 parameters (total digits, digits right of the decimal point)
+        "REAL",
+        "DOUBLE",
+        "FLOAT",
+        "NUMERIC",
+        "CHARACTER", // 1 parameter (length)
+        "VARCHAR", // 1 parameter (length)
+        "NCHAR", // 1 parameter (length)
+        "NVARCHAR", // 1 parameter (length)
+        "TEXT",
+        "BOOLEAN",
+        "DATE",
+        "DATETIME"
+    ]
+
+    const validParameters = [
+        {
+            type: "DECIMAL",
+            parameters: 2
+        },
+        {
+            type: "CHARACTER",
+            parameters: 1
+        },
+        {
+            type: "VARCHAR",
+            parameters: 1
+        },
+        {
+            type: "NCHAR",
+            parameters: 1
+        },
+        {
+            type: "NVARCHAR",
+            parameters: 1
+        },
+    ]
+    
+    const validConstraints = [
+        "NOT NULL",
+        "UNIQUE",
+        "PRIMARY KEY",
+        "AUTO INCREMENT"
+    ]
+
+    const validParaConstraints = [
+        "DEFAULT" // needs parameter
+    ]
+
+    var hasPK = false;
+    var hasAI = false;
+    // validation process
+    for (var i = 0; i < list.length; i++) {
+        var field = list[i]
+        var err = {fieldID: i, fieldName: field.name};
+        // is the name a duplicate?
+        for (var j = 0; j < list.length; j++) {
+            if (i != j && field.name == list[j].name) throw {code: "V09", httpCode: 400, data: {fieldID: null, fieldName: field.name}, message: "Duplicate field names"};
+        }
+
+        var type = field.type.toUpperCase();
+        // does it contain a parameter?
+        if (type.includes("(") && type.includes(")")) {
+            var split1 = type.split("(");
+            type = split1[0];
+            // how many parameters are there meant to be
+            var paras = 0;
+            for (var para of validParameters) {
+                if (type == para.type) {
+                    paras = para.parameters;
+                }
+            }
+            if (paras == 0) throw {code: "V03", httpCode: 400, data: err, message: "Data type has parameters when it shouldn't"};
+            if (paras == 1) {
+                if (split1.length == 2) {
+                    var isNotNumber = isNaN(split1[1].replace(")", ""));
+                    if (isNotNumber) {
+                        throw {code: "V04", httpCode: 400, data: err, message: "Invlid parameter or parameter length"};
+                    }
+                } else {
+                    throw {code: "V02", httpCode: 500, data: err, message: "Invlid parameter format"};
+                }
+            }
+            if (paras == 2) {
+                if (split1.length == 2) {
+                    var split2 = split1[1].replace(")", "").replaceAll(" ", "").split(",")
+                    if (split2.length != 2) throw {code: "V04", httpCode: 400, data: err, message: "Invlid parameter or parameter length"};
+                    if (isNaN(split2[0])) throw {code: "V04", httpCode: 400, data: err, message: "Invlid parameter or parameter length"};
+                    if (isNaN(split2[1])) throw {code: "V04", httpCode: 400, data: err, message: "Invlid parameter or parameter length"};
+                } else {
+                    throw {code: "V02", httpCode: 500, data: err, message: "Invlid parameter format"};
+                }
+            }
+        }
+        if (! validTypes.includes(type)) {
+            throw {code: "V05", httpCode: 400, data: err, message: "Invlid data type"};
+        }
+
+        for (var constr of field.constraints) {
+            constr = constr.toUpperCase();
+            if (! validConstraints.includes(constr)) {
+                // does it have parameters?
+                var split1 = constr.split(" ", 2);
+                if (! validParaConstraints.includes(split1[0])) throw {code: "V06", httpCode: 400, data: err, message: "Invlid constraint"};
+            }
+            if (constr == "PRIMARY KEY") {
+                if (hasPK) throw {code: "V07", httpCode: 400, data: err, message: "More than one PRIMARY KEY in a table"};
+                hasPK = true;
+            }
+            if (constr == "AUTOINCREMENT") {
+                if (hasAI) throw {code: "V07", httpCode: 400, data: err, message: "More than one AUTOINCREMENT in a table"};
+                hasAI = true;
+            }
+        }
+    }
+    return "success";
+}
+
+async function validateTables(tables) {
+    // check for duplicate table names
+    for (var i = 0; i < tables.length; i++) {
+        for (var j = 0; j < tables.length; j++) {
+            if (i != j && tables[i].name == tables[j].name) throw {
+                code: "V09",
+                httpCode: 400,
+                data: {fieldID: null, fieldName: null, tableID: null, tableName: tables[i].name},
+                message: "Duplicate table names"
+            };
+        }
+    }
+    return "success";
+}
+
+module.exports = {validateFields, validateTables};
