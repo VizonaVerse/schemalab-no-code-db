@@ -96,6 +96,15 @@ describe("Validation tests", () => {
         } catch (err) {
             await expect(err.code).toBe("V05");
         }
+        var list = [
+            {name: "1", type: "VARCHAR", constraints: []},
+        ]
+        try {
+            var res = await valFunctions.validateFields(list);
+        } catch (err) {
+            console.log(err);
+            await expect(err.code).toBe("V05");
+        }
     });
     test("Test incorrect constraint usage", async () => {
         var list = [

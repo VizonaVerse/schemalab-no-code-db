@@ -125,7 +125,7 @@ async function validateFields(list) {
                 if (hasPK) throw {code: "V07", httpCode: 400, data: err, message: "More than one PRIMARY KEY in a table"};
                 hasPK = true;
             }
-            if (constr == "AUTOINCREMENT") {
+            if (constr == "AUTO INCREMENT") {
                 if (hasAI) throw {code: "V07", httpCode: 400, data: err, message: "More than one AUTOINCREMENT in a table"};
                 hasAI = true;
             }
