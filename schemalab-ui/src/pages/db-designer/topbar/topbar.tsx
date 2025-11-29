@@ -1,10 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import "./topbar.scss"; // Import CSS for styling
 import { Node, NodeProps } from "reactflow";
 import Logo from "../../../assets/schemalab-logo-no-text.svg";
 import { DownOutlined, SettingOutlined } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
-import { Dropdown, Switch, Space, Button, Tooltip } from 'antd';
+import { Dropdown, Switch, Space, Button, Tooltip, Modal, Input, message } from 'antd';
 import { useCanvasContext } from "../../../contexts/canvas-context";
 import tableAdd from "../../../assets/TableAdd.svg";
 import bin from "../../../assets/bin.svg";
@@ -18,23 +18,39 @@ export interface TopBarProps {
 
 export const Topbar = ({ projectName }: TopBarProps) => {
     const { mode, setMode, handleCanvasData, nodes, setNodes, deleteSelectedNodes, copySelectedNodes, pasteNodes } = useCanvasContext();
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [inputName, setInputName] = useState("");
+    const [inputDescription, setInputDescription] = useState("");
 
-    const saveCanvas = async () => {
+    const handleSaveClick = () => {
+        setIsModalOpen(true);
+    };
+
+    const handleModalOk = async () => {
         try {
-            // Format the canvas data
             const formattedData = handleCanvasData();
-
-            // Send the data to the backend
+            console.log("Formatted Canvas Data for saving:", formattedData);
             await axios.post('http://localhost:6060/api/projects/', {
-                name: projectName || "Untitled Project",
-                description: "Project description here", // Replace with actual description if available
-                data: formattedData, // Send the formatted canvas data
+                name: inputName,
+                description: inputDescription,
+                data: formattedData,
             });
-
-            console.log("Canvas data saved successfully!");
-        } catch (error) {
-            console.error("Failed to save canvas data:", error);
+            message.success("Canvas data saved successfully!");
+            setIsModalOpen(false);
+        } catch (error: any) {
+            // Show backend error message if available
+            const backendMsg =
+                error?.response?.data?.name?.[0] ||
+                error?.response?.data?.description?.[0] ||
+                error?.response?.data?.detail ||
+                "Failed to save canvas data.";
+            message.error(backendMsg);
+            setIsModalOpen(false);
         }
+    };
+
+    const handleModalCancel = () => {
+        setIsModalOpen(false);
     };
 
     const items: MenuProps['items'] = [
@@ -47,7 +63,7 @@ export const Topbar = ({ projectName }: TopBarProps) => {
         },
         {
             key: 2,
-            label: (<a onClick={saveCanvas}>Save</a>) // Call saveCanvas on click
+            label: (<a onClick={handleSaveClick}>Save</a>) // Open modal on click
         },
         {
             key: 3,
@@ -141,6 +157,27 @@ export const Topbar = ({ projectName }: TopBarProps) => {
                     
                 </div>
             </div>
+            <Modal
+                title="Save Project"
+                open={isModalOpen}
+                onOk={handleModalOk}
+                onCancel={handleModalCancel}
+                okText="Save"
+            >
+                <Input
+                    placeholder="Project Name (alphanumeric, max 20 chars)"
+                    maxLength={20}
+                    value={inputName}
+                    onChange={e => setInputName(e.target.value)}
+                    style={{ marginBottom: 12 }}
+                />
+                <Input
+                    placeholder="Description (alphanumeric, max 200 chars)"
+                    maxLength={200}
+                    value={inputDescription}
+                    onChange={e => setInputDescription(e.target.value)}
+                />
+            </Modal>
         </div>
     );
 };
