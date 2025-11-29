@@ -36,4 +36,3 @@ trigger_management:
   trigger:
     include: management/.gitlab-ci.yml
     strategy: depend
-    
