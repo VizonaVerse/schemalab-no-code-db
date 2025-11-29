@@ -30,7 +30,7 @@ trigger_auth:
   stage: trigger
   rules:
     - changes:
-      - auth/**/*
+      - auth/**
   trigger:
     include: auth/.gitlab-ci.yml
     strategy: depend
