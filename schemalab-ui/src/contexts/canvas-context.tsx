@@ -157,6 +157,7 @@ export const CanvasProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setCanvasData(formattedData); // Store the formatted data in state
         // change this later on to send request to schema maker
         console.log("Formatted Canvas Data:", formattedData); // Log or send the data
+        return formattedData;
     }, [nodes, edges]);
 
     const onNodesChange: OnNodesChange = (changes) => {
