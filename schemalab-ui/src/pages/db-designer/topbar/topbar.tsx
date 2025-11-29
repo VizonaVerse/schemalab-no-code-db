@@ -10,6 +10,7 @@ import tableAdd from "../../../assets/TableAdd.svg";
 import bin from "../../../assets/bin.svg";
 import copy from "../../../assets/copy.svg";
 import paste from "../../../assets/paste.svg";
+import axios from "axios"; // Import axios for HTTP requests
 
 export interface TopBarProps {
     projectName?: string;
@@ -17,6 +18,24 @@ export interface TopBarProps {
 
 export const Topbar = ({ projectName }: TopBarProps) => {
     const { mode, setMode, handleCanvasData, nodes, setNodes, deleteSelectedNodes, copySelectedNodes, pasteNodes } = useCanvasContext();
+
+    const saveCanvas = async () => {
+        try {
+            // Format the canvas data
+            const formattedData = handleCanvasData();
+
+            // Send the data to the backend
+            await axios.post('http://localhost:6060/api/projects/', {
+                name: projectName || "Untitled Project",
+                description: "Project description here", // Replace with actual description if available
+                data: formattedData, // Send the formatted canvas data
+            });
+
+            console.log("Canvas data saved successfully!");
+        } catch (error) {
+            console.error("Failed to save canvas data:", error);
+        }
+    };
 
     const items: MenuProps['items'] = [
         {
@@ -28,7 +47,7 @@ export const Topbar = ({ projectName }: TopBarProps) => {
         },
         {
             key: 2,
-            label: 'Save'
+            label: (<a onClick={saveCanvas}>Save</a>) // Call saveCanvas on click
         },
         {
             key: 3,
