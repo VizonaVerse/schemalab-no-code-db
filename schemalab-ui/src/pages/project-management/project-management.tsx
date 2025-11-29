@@ -6,10 +6,10 @@ interface ProjectCardProps {
     id: number;
     name: string;
     description: string;
-    canvas_data?: any;
+    data?: any;
 }
 
-const ProjectCard = ({ id, name, description, canvas_data }: ProjectCardProps) => {
+const ProjectCard = ({ id, name, description, data }: ProjectCardProps) => {
     const navigate = useNavigate();
 
     const handleProjectClick = () => {
@@ -20,7 +20,7 @@ const ProjectCard = ({ id, name, description, canvas_data }: ProjectCardProps) =
         <div className="project-card" onClick={handleProjectClick}>
             <div className="project-canvas-preview">
                 <div className="canvas-placeholder">
-                    {canvas_data ? (
+                    {data ? (
                         <div className="canvas-miniature">
                             <svg viewBox="0 0 200 150" className="mini-diagram">
                                 {/* Simple representation of tables */}
@@ -77,7 +77,7 @@ export const ProjectManagement = () => {
                         id={project.id}
                         name={project.name}
                         description={project.description}
-                        canvas_data={project.canvas_data}
+                        data={project.canvas_data}
                     />
                 ))}
             </div>
