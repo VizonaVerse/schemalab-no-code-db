@@ -12,9 +12,9 @@ router.post('/', async (req, res, next) => {
         var canvas = data.canvas;
     }catch (err){
         return res.status(400).json({
-            code: err.code,
+            code: 400,
             message: err.message,
-            errorCode: err.httpCode,
+            errorCode: "S00",
             data: {}, // can send back additional data later
             time: getDate(),
         });
@@ -75,7 +75,17 @@ router.post('/', async (req, res, next) => {
 });
 
 router.get('/DB', async (req, res, next) => {
-    var {data} = req.body
+    try{
+        var {data} = req.body
+    }catch (err){
+        return res.status(400).json({
+            code: 400,
+            message: err.message,
+            errorCode: "S00",
+            data: {}, // can send back additional data later
+            time: getDate(),
+        });
+    }
     
     file = path.resolve("tempFiles/" + data.fileName + ".db");
     res.sendFile(file, function (err) {
@@ -93,7 +103,17 @@ router.get('/DB', async (req, res, next) => {
 });
 
 router.get('/SQL', async (req, res, next) => {
-    var {data} = req.body
+    try{
+        var {data} = req.body
+    }catch (err){
+        return res.status(400).json({
+            code: 400,
+            message: err.message,
+            errorCode: "S00",
+            data: {}, // can send back additional data later
+            time: getDate(),
+        });
+    }
     
     file = path.resolve("tempFiles/" + data.fileName + ".sql");
     res.sendFile(file, function (err) {
