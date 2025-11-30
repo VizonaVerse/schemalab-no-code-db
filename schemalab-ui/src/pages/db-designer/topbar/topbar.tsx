@@ -3,7 +3,6 @@ import "./topbar.scss"; // Import CSS for styling
 import { Node, NodeProps } from "reactflow";
 import Logo from "../../../assets/schemalab-logo-no-text.svg";
 import { DownOutlined, SettingOutlined } from '@ant-design/icons';
-import type { MenuProps } from 'antd';
 import { Dropdown, Switch, Space, Button, Tooltip, Modal, Input, message } from 'antd';
 import { useCanvasContext } from "../../../contexts/canvas-context";
 import tableAdd from "../../../assets/TableAdd.svg";
@@ -11,6 +10,9 @@ import bin from "../../../assets/bin.svg";
 import copy from "../../../assets/copy.svg";
 import paste from "../../../assets/paste.svg";
 import axios from "axios"; // Import axios for HTTP requests
+import { useNavigate } from "react-router-dom";
+import { useAuth } from '../../../contexts/auth-context';
+import type { MenuProps } from 'antd';
 
 export interface TopBarProps {
     projectName?: string;
@@ -18,9 +20,11 @@ export interface TopBarProps {
 
 export const Topbar = ({ projectName }: TopBarProps) => {
     const { mode, setMode, handleCanvasData, nodes, setNodes, deleteSelectedNodes, copySelectedNodes, pasteNodes, setProjectName } = useCanvasContext();
+    const { fetchProjects } = useAuth();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [inputName, setInputName] = useState(projectName); // <-- Use context value
     const [inputDescription, setInputDescription] = useState("");
+    const navigate = useNavigate();
 
     const handleSaveClick = () => {
         setInputName(projectName); // <-- Reset to current name when opening modal
@@ -80,8 +84,18 @@ export const Topbar = ({ projectName }: TopBarProps) => {
         },
         {
             key: 5,
-            label: 'Close'
-        }
+            label: (
+                <a
+                    onClick={async (e) => {
+                        e.preventDefault();
+                        await fetchProjects();
+                        navigate("/projects");
+                    }}
+                >
+                    Close
+                </a>
+            ),
+        },
     ];
 
     const addTable = () => {
