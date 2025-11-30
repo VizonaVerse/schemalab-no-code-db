@@ -26,12 +26,18 @@ export const Topbar = ({ projectName }: TopBarProps) => {
     const [inputDescription, setInputDescription] = useState("");
     const navigate = useNavigate();
 
+    const [messageApi, contextHolder] = message.useMessage();
+
     const handleSaveClick = () => {
         setInputName(projectName); // <-- Reset to current name when opening modal
         setIsModalOpen(true);
     };
 
     const handleModalOk = async () => {
+        if (!inputName || inputName.trim() === "") {
+            messageApi.warning("Project name cannot be empty.");
+            return;
+        }
         try {
             const formattedData = handleCanvasData();
             console.log("Formatted Canvas Data for saving:", formattedData);
@@ -40,17 +46,16 @@ export const Topbar = ({ projectName }: TopBarProps) => {
                 description: inputDescription,
                 data: formattedData,
             });
-            setProjectName(inputName || "Untitled Project"); // <-- Always pass a string
-            message.success("Canvas data saved successfully!");
+            setProjectName(inputName || "Untitled Project");
+            messageApi.success("Canvas data saved successfully!");
             setIsModalOpen(false);
         } catch (error: any) {
-            // Show backend error message if available
             const backendMsg =
                 error?.response?.data?.name?.[0] ||
                 error?.response?.data?.description?.[0] ||
                 error?.response?.data?.detail ||
                 "Failed to save canvas data.";
-            message.error(backendMsg);
+            messageApi.error(backendMsg);
             setIsModalOpen(false);
         }
     };
@@ -121,6 +126,7 @@ export const Topbar = ({ projectName }: TopBarProps) => {
 
     return (
         <div className="topbar">
+            {contextHolder}
             <div className="topbar-start">
                 <a href="/home">
                     <img src={Logo} alt="Schemalab Logo" className="logo" />
@@ -190,12 +196,12 @@ export const Topbar = ({ projectName }: TopBarProps) => {
                     }}
                     style={{ marginBottom: 12 }}
                 />
-                <Input
+                {/* <Input
                     placeholder="Description (alphanumeric, max 200 chars)"
                     maxLength={200}
                     value={inputDescription}
                     onChange={e => setInputDescription(e.target.value)}
-                />
+                /> */}
             </Modal>
         </div>
     );
