@@ -1,23 +1,45 @@
+image: docker:27-cli
+
+services:
+  - name: docker:27-dind
+    alias: docker
+
+variables:
+  DOCKER_HOST: tcp://docker:2375
+  DOCKER_TLS_CERTDIR: ""
+  DOCKER_DRIVER: overlay2
+
 stages:
   - build
   - test
   - deploy
 
-test_environment:
+test_docker:
   stage: build
-  
   script:
-    - echo "Testing environment..."
-    - pwd
-    - ls -la
-    - which docker || echo "Docker command not found"
-    - docker --version || echo "Cannot run docker" 
+    - docker info
+    - docker --version
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual
 
 build_image:
   stage: build
   
+  before_script:
+    - |
+      echo "Waiting for Docker daemon..."
+      for i in $(seq 1 30); do
+        if docker info >/dev/null 2>&1; then
+          echo "Docker is ready!"
+          break
+        fi
+        echo "Attempt $i/30..."
+        sleep 2
+      done
+    - docker info
+  
   script:
-    - docker info 
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
     - cd auth/
     - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA .
@@ -47,6 +69,7 @@ deploy_to_server:
   
   script:
     - echo "Deployment confirmed. Image $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA is ready."
+    - echo "Deployment steps would go here."
     
   rules:
     - if: $CI_COMMIT_BRANCH
