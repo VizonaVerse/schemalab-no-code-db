@@ -3,10 +3,18 @@ stages:
   - test
   - deploy
 
+test_environment:
+  stage: build
+  
+  script:
+    - echo "Testing environment..."
+    - pwd
+    - ls -la
+    - which docker || echo "Docker command not found"
+    - docker --version || echo "Cannot run docker" 
+
 build_image:
   stage: build
-  tags:
-    - docker
   
   script:
     - docker info 
@@ -23,8 +31,6 @@ build_image:
 run_tests:
   stage: test
   needs: [build_image]
-  tags:
-    - shell
   
   script:
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
@@ -38,8 +44,6 @@ run_tests:
 
 deploy_to_server:
   stage: deploy
-  tags:
-    - shell
   
   script:
     - echo "Deployment confirmed. Image $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA is ready."
