@@ -2,7 +2,8 @@ import 'antd/dist/reset.css';
 import './project-management.scss';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/auth-context';
-import { message } from "antd";
+import React, { useState } from "react";
+import { message, Modal } from "antd";
 
 interface ProjectCardProps {
     id: number;
@@ -11,23 +12,39 @@ interface ProjectCardProps {
     data?: any;
 }
 
-const ProjectCard = ({ id, name, description, data }: ProjectCardProps) => {
+const ProjectCard = ({ id, name, description, data, messageApi }: ProjectCardProps & { messageApi: any }) => {
     const navigate = useNavigate();
     const { deleteProject, fetchProjects } = useAuth();
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     const handleProjectClick = () => {
-        navigate(`/dev/db-designer?project=${id}`);
+        if (!isModalOpen) {
+            navigate(`/dev/db-designer?project=${id}`);
+        }
     };
 
-    const handleDelete = async (e: React.MouseEvent) => {
+    const handleDelete = (e: React.MouseEvent) => {
         e.stopPropagation();
+        setIsModalOpen(true);
+    };
+
+    const handleModalOk = async () => {
         await deleteProject(id);
-        message.success("Successfully deleted", 2.5); // Show toast for 2.5 seconds
-        await fetchProjects(); // Re-fetch projects after delete
+        messageApi.success("Successfully deleted", 2.5);
+        await fetchProjects();
+        setIsModalOpen(false);
+    };
+
+    const handleModalCancel = () => {
+        setIsModalOpen(false);
     };
 
     return (
-        <div className="project-card" onClick={handleProjectClick}>
+        <div
+            className={`project-card${isModalOpen ? " modal-open" : ""}`}
+            onClick={handleProjectClick}
+            style={isModalOpen ? { pointerEvents: "none", opacity: 0.7 } : {}}
+        >
             <div className="project-canvas-preview">
                 <div className="canvas-placeholder">
                     {data ? (
@@ -56,6 +73,16 @@ const ProjectCard = ({ id, name, description, data }: ProjectCardProps) => {
             <div className="project-info">
                 {description && <p className="project-description">{description}</p>}
             </div>
+            <Modal
+                title="Delete Project"
+                open={isModalOpen}
+                onOk={handleModalOk}
+                onCancel={handleModalCancel}
+                okText="Delete"
+                okButtonProps={{ danger: true }}
+            >
+                <p>Are you sure you want to delete <b>{name}</b>? This action cannot be undone.</p>
+            </Modal>
         </div>
     );
 };
@@ -106,6 +133,7 @@ function renderMiniDiagram(data: any) {
 export const ProjectManagement = () => {
     const { projects, loading } = useAuth();
     const navigate = useNavigate();
+    const [messageApi, contextHolder] = message.useMessage();
 
     const handleNewProject = () => {
         navigate('/dev/db-designer');
@@ -117,6 +145,7 @@ export const ProjectManagement = () => {
 
     return (
         <div className="project-management-page">
+            {contextHolder}
             <header className="projects-header">
                 <h1>Projects</h1>
             </header>
@@ -142,6 +171,7 @@ export const ProjectManagement = () => {
                         }
                         description={project.description}
                         data={project.data}
+                        messageApi={messageApi}
                     />
                 ))}
             </div>
