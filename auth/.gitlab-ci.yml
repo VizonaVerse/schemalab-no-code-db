@@ -1,24 +1,28 @@
 image: docker:27-cli
+
 services:
-  - name: docker:24.0.5-dind
-    command: ["--tls=false"]
-    
+  - name: docker:27-dind
+    alias: docker
+    variables:
+      DOCKER_TLS_CERTDIR: ""
+
 variables:
-  DOCKER_HOST: tcp://docker:2376
-  DOCKER_TLS_CERTDIR: "/certs"
-  DOCKER_TLS_VERIFY: 1
-  DOCKER_CERT_PATH: "$DOCKER_TLS_CERTDIR/client"
+  DOCKER_HOST: tcp://docker:2375
+  DOCKER_TLS_CERTDIR: ""
+  DOCKER_DRIVER: overlay2
 
 stages:
   - build
   - test
   - deploy
 
+before_script:
+  - until docker info; do sleep 1; done 
+
 build_image:
   stage: build
   
   script:
-    - docker info
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
     - cd auth/
     - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA .
