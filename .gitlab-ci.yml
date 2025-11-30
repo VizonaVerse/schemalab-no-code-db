@@ -1,3 +1,13 @@
+<<<<<<< HEAD
+=======
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - when: never
+
+    - when: always
+
+>>>>>>> deff007 (trying pipeline2)
 stages:
   - trigger
   
