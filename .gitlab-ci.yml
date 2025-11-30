@@ -19,6 +19,7 @@ trigger_schema:
     include: schema/.gitlab-ci.yml
     strategy: depend
 
+<<<<<<< HEAD
 #trigger_auth:
 #  stage: trigger
 #  rules:
@@ -27,6 +28,16 @@ trigger_schema:
 #  trigger:
 #    include: schemalab-ui/.gitlab-ci.yml
 #    strategy: depend
+=======
+trigger_auth:
+  stage: trigger
+  rules:
+    - changes:
+      - auth/**
+  trigger:
+    include: auth/.gitlab-ci.yml
+    strategy: depend
+>>>>>>> 5102525 (Add CI/CD configuration for auth service with Docker support)
 
 trigger_management:
   stage: trigger
