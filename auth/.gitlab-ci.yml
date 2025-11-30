@@ -6,10 +6,10 @@ stages:
 build_image:
   stage: build
   tags:
-    - shell  # or whatever tag your shell runner has
+    - docker
   
   script:
-    - docker info  # Test if Docker is available
+    - docker info 
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
     - cd auth/
     - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA .
