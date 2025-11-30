@@ -21,7 +21,7 @@ run_tests:
     - cd auth/
     - python3 --version 
     - pip install -r requirements.txt
-    - python manage.py test --settings=auth_project.settings --keepdb --database=default --settings=auth_project.settings --with-coverage --exclude-dirs=auth_project/settings.py
+    - python manage.py test --settings=auth_project.settings --keepdb
     
   rules:
     - if: $CI_COMMIT_BRANCH
