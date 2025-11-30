@@ -127,6 +127,42 @@
                 overflow: hidden;
             }
         }
+
+        .project-info-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 20px 0 20px;
+
+            .project-name {
+                margin: 0;
+                font-size: 16px;
+                font-weight: 600;
+                color: #333;
+            }
+
+            .delete-project-btn {
+                color: #ff5451;
+                background: transparent;
+                border: none;
+                border-radius: 12.5%;
+                padding: 6px;
+                display: flex;
+                align-items: center;
+                transition: background 0.2s, border-radius 0.2s;
+
+                svg {
+                    transition: fill 0.2s, stroke 0.2s;
+                }
+
+                &:hover {
+                    color: #222;
+                    background: #ffc8c8; // subtle light red
+                    border-radius: 12.5%;
+                }
+
+            }
+        }
     }
 
     .loading {
@@ -135,4 +171,5 @@
         font-size: 18px;
         color: #666;
     }
+
 }
