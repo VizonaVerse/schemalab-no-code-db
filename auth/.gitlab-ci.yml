@@ -1,14 +1,3 @@
-image: docker:27-cli
-
-services:
-  - name: docker:27-dind
-    alias: docker
-
-variables:
-  DOCKER_HOST: tcp://docker:2375
-  DOCKER_TLS_CERTDIR: ""
-  DOCKER_DRIVER: overlay2
-
 stages:
   - build
   - test
@@ -23,41 +12,14 @@ test_docker:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: manual
 
-build_image:
-  stage: build
-  
-  before_script:
-    - |
-      echo "Waiting for Docker daemon..."
-      for i in $(seq 1 30); do
-        if docker info >/dev/null 2>&1; then
-          echo "Docker is ready!"
-          break
-        fi
-        echo "Attempt $i/30..."
-        sleep 2
-      done
-    - docker info
-  
-  script:
-    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
-    - cd auth/
-    - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA .
-    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
-
-  rules:
-    - if: $CI_COMMIT_BRANCH
-      changes:
-        - auth/**/* 
-
 run_tests:
   stage: test
-  needs: [build_image]
   
   script:
-    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
-    - docker pull $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
-    - docker run $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA python manage.py test
+    - python3 --version 
+    - pip install -r requirements.txt 
+    - python manage.py check 
+    - python manage.py test
     
   rules:
     - if: $CI_COMMIT_BRANCH
