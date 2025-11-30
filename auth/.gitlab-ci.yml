@@ -24,6 +24,13 @@ before_script:
 
 build_image:
   stage: build
+  tags:
+    - docker
+
+  before_script:
+    - sleep 10 
+    - docker version
+    - docker info
   
   script:
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
