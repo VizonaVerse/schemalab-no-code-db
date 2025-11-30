@@ -18,8 +18,9 @@ run_tests:
   image: python:3.12
   
   script:
+    - cd auth/
     - python3 --version 
-    - pip install -r auth/requirements.txt
+    - pip install -r requirements.txt
     - python manage.py check 
     - python manage.py test
     
