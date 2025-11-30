@@ -1,27 +1,20 @@
-stages:
-  - build
-  - test
-  - deploy
+image: python:3.10-slim
 
-test_docker:
-  stage: build
-  script:
-    - docker info
-    - docker --version
-  rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-      when: manual
+stages:
+  - test
+  - deploy 
 
 run_tests:
   stage: test
-
-  image: python:3.12
   
   script:
     - cd auth/
-    - python3 --version 
-    - pip install -r requirements.txt
-
+    - python3 --version
+    - pip install -r requirements.txt 
+    
+    - python manage.py check 
+    - python manage.py test --settings=auth_project.settings --keepdb
+    
   rules:
     - if: $CI_COMMIT_BRANCH
       changes:
@@ -29,11 +22,9 @@ run_tests:
 
 deploy_to_server:
   stage: deploy
-  
   script:
-    - echo "Deployment confirmed. Image $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA is ready."
-    - echo "Deployment steps would go here."
-    
+    - echo "Deployment confirmed. The code passed Python tests."
+    - echo "The final image build for deployment must be done by a dedicated runner."
   rules:
     - if: $CI_COMMIT_BRANCH
       changes:
