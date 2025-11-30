@@ -1,38 +1,15 @@
-image: docker:27-cli
-
-services:
-  - docker:27-dind
-
-variables:
-  DOCKER_HOST: tcp://docker:2375
-  DOCKER_TLS_CERTDIR: ""
-  DOCKER_DRIVER: overlay2
-  FF_NETWORK_PER_BUILD: 1
-
 stages:
   - build
   - test
   - deploy
 
-before_script:
-  - |
-    for i in $(seq 1 30); do
-      docker info && break
-      echo "Waiting for docker daemon..."
-      sleep 1
-    done
-
 build_image:
   stage: build
   tags:
-    - docker
-
-  before_script:
-    - sleep 10 
-    - docker version
-    - docker info
+    - shell  # or whatever tag your shell runner has
   
   script:
+    - docker info  # Test if Docker is available
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
     - cd auth/
     - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA .
@@ -46,6 +23,8 @@ build_image:
 run_tests:
   stage: test
   needs: [build_image]
+  tags:
+    - shell
   
   script:
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
@@ -59,10 +38,11 @@ run_tests:
 
 deploy_to_server:
   stage: deploy
+  tags:
+    - shell
   
   script:
     - echo "Deployment confirmed. Image $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA is ready."
-    - echo "Deployment steps would go here."
     
   rules:
     - if: $CI_COMMIT_BRANCH
