@@ -49,11 +49,16 @@ INSTALLED_APPS = [
 ]
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [],
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'mService.remote_auth.RemoteAuth',
+    ),
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',
+        'rest_framework.permissions.IsAuthenticated',
     ],
 }
+
+# URL of the auth service used to verify tokens remotely
+AUTH_SERVICE_URL = os.getenv('AUTH_SERVICE_URL', 'http://localhost:5050')
 
 
 MIDDLEWARE = [
