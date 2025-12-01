@@ -150,6 +150,7 @@ SIMPLE_JWT = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:8080",  # Frontend
     "http://localhost:3000",  # Another frontend
+    "http://localhost:6060",  # Management Service
 ]
 
 AUTHENTICATION_BACKENDS = ['accounts.backends.EmailBackend']
