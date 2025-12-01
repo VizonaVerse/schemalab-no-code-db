@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-=======
 workflow:
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
@@ -7,18 +5,17 @@ workflow:
     
     - when: always
 
->>>>>>> deff007 (trying pipeline2)
 stages:
   - trigger
   
-# trigger_schemalab-ui:
-#   stage: trigger
-#   rules:
-#     - changes:
-#       - schemalab-ui/**
-#   trigger:
-#     include: schemalab-ui/.gitlab-ci.yml
-#     strategy: depend
+trigger_schemalab-ui:
+  stage: trigger
+  rules:
+    - changes:
+      - schemalab-ui/**
+  trigger:
+    include: schemalab-ui/.gitlab-ci.yml
+    strategy: depend
 
 trigger_schema:
   stage: trigger
@@ -29,16 +26,6 @@ trigger_schema:
     include: schema/.gitlab-ci.yml
     strategy: depend
 
-<<<<<<< HEAD
-#trigger_auth:
-#  stage: trigger
-#  rules:
-#    - changes:
-#      - auth/**
-#  trigger:
-#    include: schemalab-ui/.gitlab-ci.yml
-#    strategy: depend
-=======
 trigger_auth:
   stage: trigger
   rules:
@@ -47,7 +34,6 @@ trigger_auth:
   trigger:
     include: auth/.gitlab-ci.yml
     strategy: depend
->>>>>>> 5102525 (Add CI/CD configuration for auth service with Docker support)
 
 trigger_management:
   stage: trigger
