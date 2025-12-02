@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./topbar.scss"; // Import CSS for styling
 import { Node, NodeProps } from "reactflow";
 import Logo from "../../../assets/schemalab-logo-no-text.svg";
@@ -10,7 +10,7 @@ import bin from "../../../assets/bin.svg";
 import copy from "../../../assets/copy.svg";
 import paste from "../../../assets/paste.svg";
 import axios from "axios"; // Import axios for HTTP requests
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { useAuth } from '../../../contexts/auth-context';
 import type { MenuProps } from 'antd';
 
@@ -25,12 +25,23 @@ export const Topbar = ({ projectName }: TopBarProps) => {
     const [inputName, setInputName] = useState(projectName); // <-- Use context value
     const [inputDescription, setInputDescription] = useState("");
     const navigate = useNavigate();
+    const location = useLocation();
+    const { id: projectId } = useParams(); // <-- Get id from URL params
 
     const [messageApi, contextHolder] = message.useMessage();
 
+    useEffect(() => {
+        if (isModalOpen) {
+            setInputName(projectName); // Always sync inputName with context when modal opens
+        }
+    }, [isModalOpen, projectName]);
+
     const handleSaveClick = () => {
-        setInputName(projectName); // <-- Reset to current name when opening modal
-        setIsModalOpen(true);
+        if (!projectId) {
+            setIsModalOpen(true); // Modal will sync inputName via useEffect
+        } else {
+            handleModalOk(); // Directly save if id exists
+        }
     };
 
     const handleModalOk = async () => {
@@ -41,13 +52,26 @@ export const Topbar = ({ projectName }: TopBarProps) => {
         try {
             const formattedData = handleCanvasData();
             console.log("Formatted Canvas Data for saving:", formattedData);
-            await axios.post('http://localhost:6060/api/projects/', {
-                name: inputName,
-                description: inputDescription,
-                data: formattedData,
-            });
+
+            if (projectId) {
+                // Update existing project
+                console.log("Updating project with ID:", projectId);
+                await axios.put(`http://localhost:6060/api/projects/${projectId}/`, {
+                    name: inputName,
+                    description: inputDescription,
+                    data: formattedData,
+                });
+                messageApi.success("Project updated successfully!");
+            } else {
+                // Create new project
+                await axios.post('http://localhost:6060/api/projects/', {
+                    name: inputName,
+                    description: inputDescription,
+                    data: formattedData,
+                });
+                messageApi.success("Canvas data saved successfully!");
+            }
             setProjectName(inputName || "Untitled Project");
-            messageApi.success("Canvas data saved successfully!");
             setIsModalOpen(false);
         } catch (error: any) {
             const backendMsg =
