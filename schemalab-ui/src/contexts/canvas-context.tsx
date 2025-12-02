@@ -55,7 +55,7 @@ interface FormattedCanvasData {
 
 const CanvasContext = createContext<CanvasContextType | undefined>(undefined);
 
-const initialNodes: Node[] = [
+export const initialNodes: Node[] = [
     {
         id: "1",
         type: "tableNode",
@@ -76,7 +76,7 @@ const initialNodes: Node[] = [
     },
 ];
 
-const initialEdges: Edge[] = [
+export const initialEdges: Edge[] = [
     { id: "e1-2", source: "1", sourceHandle: "row-0-left", target: "2", targetHandle: "row-1-right", type: "oneToManyEdge" },
     { id: "e1-3", source: "1", sourceHandle: "row-2-left", target: "3", targetHandle: "row-0-right", type: "oneToOneEdge" },
 ];

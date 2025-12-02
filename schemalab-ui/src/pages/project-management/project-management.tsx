@@ -19,7 +19,7 @@ const ProjectCard = ({ id, name, description, data, messageApi }: ProjectCardPro
 
     const handleProjectClick = () => {
         if (!isModalOpen) {
-            navigate(`/dev/db-designer?project=${id}`);
+            navigate(`/dev/db-designer/${id}`);
         }
     };
 
