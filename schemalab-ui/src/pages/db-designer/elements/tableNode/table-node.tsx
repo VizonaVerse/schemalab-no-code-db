@@ -368,13 +368,13 @@ export const TableNode = ({
                 </td>
 
                 {/* render any extra columns after second if present */}
-                {row.slice(2).map((cell, colIndex) => (
+                {row && Array.isArray(row) ? row.slice(2).map((cell, colIndex) => (
                   <td key={colIndex + 2}>
                     <span onDoubleClick={() => handleDoubleClickCell(rowIndex, colIndex + 2)}>
                       {cell || "Empty"}
                     </span>
                   </td>
-                ))}
+                )) : null}
 
                 <td>
                   {tableData.length > 1 && (

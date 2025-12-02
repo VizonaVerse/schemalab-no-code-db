@@ -6,6 +6,7 @@ import { useLocation, useParams } from "react-router-dom";
 import { useEffect } from "react";
 import { useCanvasContext, initialNodes, initialEdges } from "../../contexts/canvas-context";
 import axios from "axios";
+import { mapProjectToNodesEdges } from "../../utils/canvas-utils";
 
 export interface DbDesignerProps {
     example: string;
@@ -16,9 +17,14 @@ export function DbDesigner({ example }: DbDesignerProps) {
     const { id: projectId } = useParams();
     const { setNodes, setEdges, setProjectName } = useCanvasContext();
     const { projectName } = useCanvasContext();
+    const { nodes, edges } = useCanvasContext(); // <-- get current nodes/edges from context
 
     useEffect(() => {
         async function loadProject() {
+            // Always clear previous canvas state first
+            setNodes([]);
+            setEdges([]);
+
             let projectData = location.state?.projectData;
             if (!projectData && projectId) {
                 const res = await axios.get(`http://localhost:6060/api/projects/${projectId}/`);
@@ -32,24 +38,7 @@ export function DbDesigner({ example }: DbDesignerProps) {
                     "Untitled Project"
                 );
 
-                // Convert tables to React Flow nodes
-                const nodes = (projectData.data.canvas.tables || []).map((table: any) => ({
-                    id: table.id,
-                    type: "tableNode",
-                    data: { label: table.name, ...table.data },
-                    position: table.position,
-                }));
-
-                // Convert relationships to React Flow edges
-                const edges = (projectData.data.canvas.relationships || []).map((rel: any) => ({
-                    id: rel.id,
-                    source: rel.source,
-                    sourceHandle: rel.sourceHandle,
-                    target: rel.target,
-                    targetHandle: rel.targetHandle,
-                    type: rel.type,
-                }));
-
+                const { nodes, edges } = mapProjectToNodesEdges(projectData);
                 setNodes(nodes);
                 setEdges(edges);
             } else if (!projectId) {
@@ -62,12 +51,18 @@ export function DbDesigner({ example }: DbDesignerProps) {
         loadProject();
     }, [location.state, setNodes, setEdges, setProjectName, projectId]);
 
+    useEffect(() => {
+        // Log finalised nodes and edges whenever they change
+        console.log("Finalised nodes:", nodes);
+        console.log("Finalised edges:", edges);
+    }, [nodes, edges]);
+
     return (
         <div className="db-designer">
             <Topbar projectName={projectName} />
             <div className="canvas">
-                <ReactFlowProvider>
-                    <Canvas />
+                <ReactFlowProvider key={projectId || projectName}>
+                    <Canvas key={projectId || projectName} />
                 </ReactFlowProvider>
             </div>
         </div>
