@@ -17,7 +17,7 @@ export function DbDesigner({ example }: DbDesignerProps) {
     const { id: projectId } = useParams();
     const { setNodes, setEdges, setProjectName } = useCanvasContext();
     const { projectName } = useCanvasContext();
-    const { nodes, edges } = useCanvasContext(); // <-- get current nodes/edges from context
+    const { nodes, edges } = useCanvasContext(); // <-- get nodes/edges from context
 
     useEffect(() => {
         async function loadProject() {
@@ -31,21 +31,20 @@ export function DbDesigner({ example }: DbDesignerProps) {
                 projectData = res.data;
             }
             if (projectData && projectData.data && projectData.data.canvas) {
+                const { nodes, edges } = mapProjectToNodesEdges(projectData);
+                setNodes(nodes);
+                setEdges(edges);
                 setProjectName(
                     projectData.name ||
                     projectData.data.projectName ||
                     projectData.projectName ||
                     "Untitled Project"
                 );
-
-                const { nodes, edges } = mapProjectToNodesEdges(projectData);
-                setNodes(nodes);
-                setEdges(edges);
             } else if (!projectId) {
                 // Reset canvas for new project to initial state
-                setProjectName("New Project");
                 setNodes(initialNodes);
                 setEdges(initialEdges);
+                setProjectName("New Project");
             }
         }
         loadProject();
@@ -57,12 +56,16 @@ export function DbDesigner({ example }: DbDesignerProps) {
         console.log("Finalised edges:", edges);
     }, [nodes, edges]);
 
+    // Add a derived key that changes when projectId or projectName changes
+    const canvasKey = `${projectId || "new"}-${projectName}`;
+
+    // Force reload by changing key on top-level div
     return (
         <div className="db-designer">
             <Topbar projectName={projectName} />
             <div className="canvas">
-                <ReactFlowProvider key={projectId || projectName}>
-                    <Canvas key={projectId || projectName} />
+                <ReactFlowProvider key={canvasKey}>
+                    <Canvas key={canvasKey} />
                 </ReactFlowProvider>
             </div>
         </div>

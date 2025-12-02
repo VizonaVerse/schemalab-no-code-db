@@ -69,7 +69,7 @@ export const Topbar = ({ projectName }: TopBarProps) => {
                 });
                 messageApi.success("Canvas data saved successfully!");
             }
-            setProjectName(inputName || "Untitled Project");
+            setProjectName(inputName || "Untitled Project"); // <-- Update context once, after save
             setIsModalOpen(false);
         } catch (error: any) {
             const backendMsg =
@@ -212,11 +212,7 @@ export const Topbar = ({ projectName }: TopBarProps) => {
                     placeholder="Project Name (alphanumeric, max 20 chars)"
                     maxLength={20}
                     value={inputName}
-                    onChange={e => {
-                        setInputName(e.target.value);
-                        setProjectName(e.target.value); // <-- Update context immediately
-                    }}
-                    style={{ marginBottom: 12 }}
+                    onChange={e => setInputName(e.target.value)} // <-- Only update local state
                 />
                 {/* <Input
                     placeholder="Description (alphanumeric, max 200 chars)"
