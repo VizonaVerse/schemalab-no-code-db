@@ -31,10 +31,8 @@ export const Topbar = ({ projectName }: TopBarProps) => {
     const [messageApi, contextHolder] = message.useMessage();
 
     useEffect(() => {
-        if (isModalOpen) {
-            setInputName(projectName); // Always sync inputName with context when modal opens
-        }
-    }, [isModalOpen, projectName]);
+        setInputName(projectName); // Always sync inputName with context
+    }, [projectName]);
 
     const handleSaveClick = () => {
         if (!projectId) {

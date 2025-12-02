@@ -5,6 +5,7 @@ import "./db-designer.scss";
 import { useLocation, useParams } from "react-router-dom";
 import { useEffect } from "react";
 import { useCanvasContext, initialNodes, initialEdges } from "../../contexts/canvas-context";
+import axios from "axios";
 
 export interface DbDesignerProps {
     example: string;
@@ -17,36 +18,48 @@ export function DbDesigner({ example }: DbDesignerProps) {
     const { projectName } = useCanvasContext();
 
     useEffect(() => {
-        const projectData = location.state?.projectData;
-        if (projectData && projectData.data && projectData.data.canvas) {
-            setProjectName(projectData.data.projectName || "Untitled Project");
+        async function loadProject() {
+            let projectData = location.state?.projectData;
+            if (!projectData && projectId) {
+                const res = await axios.get(`http://localhost:6060/api/projects/${projectId}/`);
+                projectData = res.data;
+            }
+            if (projectData && projectData.data && projectData.data.canvas) {
+                setProjectName(
+                    projectData.name ||
+                    projectData.data.projectName ||
+                    projectData.projectName ||
+                    "Untitled Project"
+                );
 
-            // Convert tables to React Flow nodes
-            const nodes = (projectData.data.canvas.tables || []).map((table: any) => ({
-                id: table.id,
-                type: "tableNode",
-                data: { label: table.name, ...table.data },
-                position: table.position,
-            }));
+                // Convert tables to React Flow nodes
+                const nodes = (projectData.data.canvas.tables || []).map((table: any) => ({
+                    id: table.id,
+                    type: "tableNode",
+                    data: { label: table.name, ...table.data },
+                    position: table.position,
+                }));
 
-            // Convert relationships to React Flow edges
-            const edges = (projectData.data.canvas.relationships || []).map((rel: any) => ({
-                id: rel.id,
-                source: rel.source,
-                sourceHandle: rel.sourceHandle,
-                target: rel.target,
-                targetHandle: rel.targetHandle,
-                type: rel.type,
-            }));
+                // Convert relationships to React Flow edges
+                const edges = (projectData.data.canvas.relationships || []).map((rel: any) => ({
+                    id: rel.id,
+                    source: rel.source,
+                    sourceHandle: rel.sourceHandle,
+                    target: rel.target,
+                    targetHandle: rel.targetHandle,
+                    type: rel.type,
+                }));
 
-            setNodes(nodes);
-            setEdges(edges);
-        } else if (!projectId) {
-            // Reset canvas for new project to initial state
-            setProjectName("New Project");
-            setNodes(initialNodes);
-            setEdges(initialEdges);
+                setNodes(nodes);
+                setEdges(edges);
+            } else if (!projectId) {
+                // Reset canvas for new project to initial state
+                setProjectName("New Project");
+                setNodes(initialNodes);
+                setEdges(initialEdges);
+            }
         }
+        loadProject();
     }, [location.state, setNodes, setEdges, setProjectName, projectId]);
 
     return (
