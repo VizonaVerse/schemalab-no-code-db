@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Handle, Position } from "reactflow";
+import React, { useRef, useState, useEffect, useLayoutEffect } from "react";
+import { Handle, Position, useViewport } from "reactflow";
 import "reactflow/dist/style.css";
 import "./table-node.scss";
 import { useCanvasContext } from "../../../../contexts/canvas-context";
+import { createPortal } from "react-dom";
 
 // metadata for each row (type, flags, default)
 type RowMeta = {
@@ -15,6 +16,30 @@ type RowMeta = {
 };
 
 // Define the custom TableNode component
+const TYPE_OPTIONS: string[] = [
+  "INT",
+  "INTEGER",
+  "TINYINT",
+  "SMALLINT",
+  "MEDIUMINT",
+  "BIGINT",
+  "INT2",
+  "INT8",
+  "DECIMAL",
+  "REAL",
+  "DOUBLE",
+  "FLOAT",
+  "NUMERIC",
+  "CHARACTER",
+  "VARCHAR",
+  "NCHAR",
+  "NVARCHAR",
+  "TEXT",
+  "BOOLEAN",
+  "DATE",
+  "DATETIME",
+];
+
 export const TableNode = ({
   id,
   data,
@@ -27,7 +52,8 @@ export const TableNode = ({
     dataModeRows?: string[][]; // Add dataModeRows to the data type
   };
 }) => {
-  const { mode, updateNodeData, selectedNodes } = useCanvasContext();
+  const { mode, updateNodeData, selectedNodes, nodes, edges } = useCanvasContext();
+  const { zoom } = useViewport();
   const rowHeight = 28.5;
   const MAX_BUILD_ROWS = 7;
   const [tableName, setTableName] = useState(data.label);
@@ -35,6 +61,10 @@ export const TableNode = ({
   const [rowMeta, setRowMeta] = useState<RowMeta[]>(data.rowMeta ?? []);
   const [dataModeRows, setDataModeRows] = useState<string[][]>(data.dataModeRows ?? [[""]]);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const dropdownPortalRef = useRef<HTMLDivElement | null>(null);
+  const typeTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const attrCellRefs = useRef<(HTMLTableCellElement | null)[]>([]);
+  const [popoverTop, setPopoverTop] = useState<number>(0);
 
   const isSelected = selectedNodes?.some(n => n.id === id);
 
@@ -151,6 +181,8 @@ export const TableNode = ({
   const [openPopoverRow, setOpenPopoverRow] = useState<number | null>(null);
   const [popoverPlacement, setPopoverPlacement] = useState<"right" | "left">("right");
   const popoverRef = useRef<HTMLDivElement | null>(null);
+  const [isTypeMenuOpen, setIsTypeMenuOpen] = useState(false);
+  const [typeMenuPosition, setTypeMenuPosition] = useState<{ top: number; left: number; width: number } | null>(null);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -172,20 +204,37 @@ export const TableNode = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [openPopoverRow]);
 
+  useEffect(() => {
+    setIsTypeMenuOpen(false);
+  }, [openPopoverRow]);
+
+  const updatePopoverTop = (rowIndex: number) => {
+    const cellEl = attrCellRefs.current[rowIndex];
+    if (!cellEl) return;
+
+    const buttonEl = cellEl.querySelector<HTMLButtonElement>(".attr-button");
+    const cellRect = cellEl.getBoundingClientRect();
+    const buttonRect = buttonEl?.getBoundingClientRect();
+
+    const offset = ((buttonRect?.top ?? cellRect.top) - cellRect.top) / (zoom || 1);
+    setPopoverTop(offset);
+  };
+
   const togglePopover = (rowIndex: number) => {
     if (openPopoverRow === rowIndex) {
       setOpenPopoverRow(null);
+      setIsTypeMenuOpen(false);
       return;
     }
-    // decide placement
-    if (containerRef.current) {
-      const rect = containerRef.current.getBoundingClientRect();
-      const spaceRight = window.innerWidth - rect.right;
-      const popoverWidth = 260; // estimate
-      setPopoverPlacement(spaceRight > popoverWidth ? "right" : "left");
-    }
+    updatePopoverTop(rowIndex);
     setOpenPopoverRow(rowIndex);
+    setIsTypeMenuOpen(false);
   };
+
+  useLayoutEffect(() => {
+    if (openPopoverRow === null) return;
+    updatePopoverTop(openPopoverRow);
+  }, [openPopoverRow, zoom]); // ensure recalculation if layout shifts
 
   const updateTableData = (updatedTable: string[][]) => {
     setTableData(updatedTable);
@@ -244,6 +293,81 @@ export const TableNode = ({
     setDataModeRows(data.dataModeRows ?? [[""]]);
   }, [data.label, data.tableData, data.rowMeta, data.dataModeRows]);
 
+  useEffect(() => {
+    attrCellRefs.current = attrCellRefs.current.slice(0, tableData.length);
+  }, [tableData.length]);
+
+  useEffect(() => {
+    const portalHost = document.createElement("div");
+    portalHost.className = "type-menu-portal";
+    document.body.appendChild(portalHost);
+    dropdownPortalRef.current = portalHost;
+
+    return () => {
+      document.body.removeChild(portalHost);
+      dropdownPortalRef.current = null;
+    };
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!isTypeMenuOpen) {
+      setTypeMenuPosition(null);
+      return;
+    }
+
+    const updatePosition = () => {
+      if (!typeTriggerRef.current) return;
+      const rect = typeTriggerRef.current.getBoundingClientRect();
+      setTypeMenuPosition({
+        top: rect.bottom + 4,
+        left: rect.left,
+        width: rect.width,
+      });
+    };
+
+    updatePosition();
+    window.addEventListener("scroll", updatePosition, true);
+    window.addEventListener("resize", updatePosition);
+    return () => {
+      window.removeEventListener("scroll", updatePosition, true);
+      window.removeEventListener("resize", updatePosition);
+    };
+  }, [isTypeMenuOpen, openPopoverRow]);
+
+  const renderTypeMenu = () => {
+    if (!isTypeMenuOpen || dropdownPortalRef.current === null || openPopoverRow === null || !typeMenuPosition) return null;
+
+    return createPortal(
+      <ul
+        className="custom-select__menu portal"
+        style={{
+          top: typeMenuPosition.top,
+          left: typeMenuPosition.left,
+          width: typeMenuPosition.width,
+          minWidth: typeMenuPosition.width,
+        }}
+        onPointerDown={(e) => e.stopPropagation()}
+        onMouseDown={(e) => e.stopPropagation()}
+      >
+        {TYPE_OPTIONS.map((option: string) => (
+          <li
+            key={option}
+            className="custom-select__option"
+            data-active={rowMeta[openPopoverRow]?.type === option}
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={() => {
+              setIsTypeMenuOpen(false);
+              updateRowMeta(openPopoverRow, { type: option });
+            }}
+          >
+            {option}
+          </li>
+        ))}
+      </ul>,
+      dropdownPortalRef.current
+    );
+  };
+
   return (
     <div className={`table-node ${isBuildMode ? 'build-mode' : 'data-mode'} ${isSelected ? 'selected' : ''}`} ref={containerRef}>
       <h4 className="table-title" onDoubleClick={handleDoubleClickTableName}>
@@ -253,7 +377,9 @@ export const TableNode = ({
         {isBuildMode ? (
           <tbody>
             {tableData.map((row, rowIndex) => (
-              <tr key={rowIndex}>
+              <tr
+                key={`${rowIndex}-${mode}`}
+              >
                 {/* first column: data name */}
                 <td>
                   <span onDoubleClick={() => handleDoubleClickCell(rowIndex, 0)}>
@@ -262,7 +388,11 @@ export const TableNode = ({
                 </td>
 
                 {/* second column: attribute button / popover trigger */}
-                <td>
+                <td
+                  ref={(el) => {
+                    attrCellRefs.current[rowIndex] = el;
+                  }}
+                >
                   <button
                     className="attr-button"
                     onClick={() => togglePopover(rowIndex)}
@@ -284,45 +414,32 @@ export const TableNode = ({
                     <div
                       className={`attr-popover ${popoverPlacement}`}
                       ref={popoverRef}
-                      style={{
-                        top: `${rowIndex * rowHeight + 40}px`,
-                      }}
+                      style={{ top: `${popoverTop}px` }}
                     >
                       <div className="popover-row">
                         <label>Type</label>
-                        <select
-                          value={rowMeta[rowIndex]?.type}
-                          onChange={(e) => {
-                            const selectedType = e.target.value;
-                            updateRowMeta(rowIndex, { type: selectedType });
-                          }}
-                        >
-                          <option value="INT">INT</option>
-                          <option value="INTEGER">INTEGER</option>
-                          <option value="TINYINT">TINYINT</option>
-                          <option value="SMALLINT">SMALLINT</option>
-                          <option value="MEDIUMINT">MEDIUMINT</option>
-                          <option value="BIGINT">BIGINT</option>
-                          <option value="INT2">INT2</option>
-                          <option value="INT8">INT8</option>
-                          <option value="DECIMAL">DECIMAL</option>
-                          <option value="REAL">REAL</option>
-                          <option value="DOUBLE">DOUBLE</option>
-                          <option value="FLOAT">FLOAT</option>
-                          <option value="NUMERIC">NUMERIC</option>
-                          <option value="CHARACTER">CHARACTER</option>
-                          <option value="VARCHAR">VARCHAR</option>
-                          <option value="NCHAR">NCHAR</option>
-                          <option value="NVARCHAR">NVARCHAR</option>
-                          <option value="TEXT">TEXT</option>
-                          <option value="BOOLEAN">BOOLEAN</option>
-                          <option value="DATE">DATE</option>
-                          <option value="DATETIME">DATETIME</option>
-                        </select>
+                        <div className="custom-select" data-open={isTypeMenuOpen}>
+                          <button
+                            type="button"
+                            className="custom-select__trigger"
+                            ref={openPopoverRow === rowIndex ? typeTriggerRef : null}
+                            onPointerDown={(e) => e.stopPropagation()}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setIsTypeMenuOpen((open) => !open);
+                            }}
+                          >
+                            {rowMeta[rowIndex]?.type || "Select type"}
+                            <span className="caret">▾</span>
+                          </button>
+                          {renderTypeMenu()}
+                        </div>
                       </div>
 
                       {/* Input for types with parameters */}
-                      {["DECIMAL", "CHARACTER", "VARCHAR", "NCHAR", "NVARCHAR"].includes(rowMeta[rowIndex]?.type.split("(")[0]) && (
+                      {["DECIMAL", "CHARACTER", "VARCHAR", "NCHAR", "NVARCHAR"].includes(
+                        rowMeta[rowIndex]?.type.split("(")[0]
+                      ) && (
                         <div className="popover-row">
                           <label>
                             {rowMeta[rowIndex]?.type.startsWith("DECIMAL")
