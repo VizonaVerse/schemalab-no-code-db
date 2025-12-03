@@ -53,7 +53,7 @@ export const TableNode = ({
   };
 }) => {
   const { mode, updateNodeData, selectedNodes, nodes, edges } = useCanvasContext();
-  const { zoom } = useViewport();
+  const { zoom, x: viewportX, y: viewportY } = useViewport();
   const rowHeight = 28.5;
   const MAX_BUILD_ROWS = 7;
   const [tableName, setTableName] = useState(data.label);
@@ -372,7 +372,7 @@ export const TableNode = ({
       window.removeEventListener("scroll", updatePosition, true);
       window.removeEventListener("resize", updatePosition);
     };
-  }, [isTypeMenuOpen, openPopoverRow]);
+  }, [isTypeMenuOpen, openPopoverRow, zoom, viewportX, viewportY]);
 
   const renderTypeMenu = () => {
     if (!isTypeMenuOpen || dropdownPortalRef.current === null || openPopoverRow === null || !typeMenuPosition) return null;
@@ -383,8 +383,10 @@ export const TableNode = ({
         style={{
           top: typeMenuPosition.top,
           left: typeMenuPosition.left,
-          width: typeMenuPosition.width,
-          minWidth: typeMenuPosition.width,
+          width: typeMenuPosition.width / (zoom || 1),
+          minWidth: typeMenuPosition.width / (zoom || 1),
+          transform: `scale(${zoom || 1})`,
+          transformOrigin: "top left",
         }}
         onPointerDown={(e) => e.stopPropagation()}
         onMouseDown={(e) => e.stopPropagation()}
