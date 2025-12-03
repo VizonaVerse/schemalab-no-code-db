@@ -383,10 +383,8 @@ export const TableNode = ({
         style={{
           top: typeMenuPosition.top,
           left: typeMenuPosition.left,
-          width: typeMenuPosition.width / (zoom || 1),
-          minWidth: typeMenuPosition.width / (zoom || 1),
-          transform: `scale(${zoom || 1})`,
-          transformOrigin: "top left",
+          width: typeMenuPosition.width,
+          minWidth: typeMenuPosition.width,
         }}
         onPointerDown={(e) => e.stopPropagation()}
         onMouseDown={(e) => e.stopPropagation()}
