@@ -206,11 +206,21 @@ export const TableNode = ({
   const isBuildMode = mode === "build";
 
   useEffect(() => {
-    // Sync initial tableData to node data if not present
-    if (!data.tableData || data.tableData.length === 0) {
-      updateNodeData(id, { tableData });
+    const patch: Partial<typeof data> = {};
+
+    if (!Array.isArray(data.tableData) || data.tableData.length === 0) {
+      patch.tableData = tableData;
     }
-    // eslint-disable-next-line
+    if (!Array.isArray(data.rowMeta) || data.rowMeta.length === 0) {
+      patch.rowMeta = rowMeta;
+    }
+    if (!Array.isArray(data.dataModeRows) || data.dataModeRows.length === 0) {
+      patch.dataModeRows = dataModeRows;
+    }
+
+    if (Object.keys(patch).length > 0) {
+      updateNodeData(id, patch);
+    }
   }, []);
 
   useEffect(() => {
