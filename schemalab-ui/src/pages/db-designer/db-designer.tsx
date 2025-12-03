@@ -4,7 +4,7 @@ import { ReactFlowProvider } from "reactflow";
 import "./db-designer.scss";
 import { useLocation, useParams } from "react-router-dom";
 import { useEffect } from "react";
-import { useCanvasContext, initialNodes, initialEdges } from "../../contexts/canvas-context";
+import { useCanvasContext, createInitialNodes, createInitialEdges } from "../../contexts/canvas-context";
 import axios from "axios";
 import { mapProjectToNodesEdges } from "../../utils/canvas-utils";
 
@@ -42,8 +42,8 @@ export function DbDesigner({ example }: DbDesignerProps) {
                 );
             } else if (!projectId) {
                 // Reset canvas for new project to initial state
-                setNodes(initialNodes);
-                setEdges(initialEdges);
+                setNodes(createInitialNodes());
+                setEdges(createInitialEdges());
                 setProjectName("New Project");
             }
         }
