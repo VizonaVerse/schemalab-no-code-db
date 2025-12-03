@@ -1,3 +1,10 @@
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: never
+    
+    - when: always
+
 stages:
   - trigger
   
@@ -10,23 +17,23 @@ trigger_schemalab-ui:
     include: schemalab-ui/.gitlab-ci.yml
     strategy: depend
 
-# trigger_schema:
-#   stage: trigger
-#   rules:
-#     - changes:
-#       - schema/**
-#   trigger:
-#     include: schemalab-ui/.gitlab-ci.yml
-#     strategy: depend
+trigger_schema:
+  stage: trigger
+  rules:
+    - changes:
+      - schema/**
+  trigger:
+    include: schema/.gitlab-ci.yml
+    strategy: depend
 
-# trigger_auth:
-#   stage: trigger
-#   rules:
-#     - changes:
-#       - auth/**
-#   trigger:
-#     include: schemalab-ui/.gitlab-ci.yml
-#     strategy: depend
+trigger_auth:
+  stage: trigger
+  rules:
+    - changes:
+      - auth/**
+  trigger:
+    include: auth/.gitlab-ci.yml
+    strategy: depend
 
 trigger_management:
   stage: trigger
