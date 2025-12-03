@@ -8,6 +8,7 @@ type Mode = "build" | "data";
 
 export interface CanvasContextType {
     projectName: string;
+    setProjectName: (name: string) => void;
     mode: Mode;
     setMode: (mode: Mode) => void;
     nodes: Node[];
@@ -54,33 +55,70 @@ interface FormattedCanvasData {
 
 const CanvasContext = createContext<CanvasContextType | undefined>(undefined);
 
-const initialNodes: Node[] = [
+type TableNodeData = {
+    label: string;
+    tableData?: string[][];
+    rowMeta?: any[];
+    dataModeRows?: string[][];
+};
+
+const initialNodeTemplate: Node<TableNodeData>[] = [
     {
         id: "1",
         type: "tableNode",
-        data: { label: "Table 1" },
+        data: { label: "Table 1", tableData: [["", ""]], rowMeta: [], dataModeRows: [[""]] },
         position: { x: 250, y: 0 },
     },
     {
         id: "2",
         type: "tableNode",
-        data: { label: "Table 2" },
+        data: { label: "Table 2", tableData: [["", ""]], rowMeta: [], dataModeRows: [[""]] },
         position: { x: 100, y: 100 },
     },
     {
         id: "3",
         type: "tableNode",
-        data: { label: "Table 3" },
+        data: { label: "Table 3", tableData: [["", ""]], rowMeta: [], dataModeRows: [[""]] },
         position: { x: 400, y: 100 },
     },
 ];
 
-const initialEdges: Edge[] = [
+const initialEdgeTemplate: Edge[] = [
     { id: "e1-2", source: "1", sourceHandle: "row-0-left", target: "2", targetHandle: "row-1-right", type: "oneToManyEdge" },
     { id: "e1-3", source: "1", sourceHandle: "row-2-left", target: "3", targetHandle: "row-0-right", type: "oneToOneEdge" },
 ];
 
-export const CanvasProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const initialNodes = initialNodeTemplate;
+export const initialEdges = initialEdgeTemplate;
+
+const cloneInitialNode = (node: Node<TableNodeData>): Node<TableNodeData> => ({
+    ...node,
+    data: {
+        ...node.data,
+        tableData: Array.isArray(node.data.tableData) && node.data.tableData.length
+            ? node.data.tableData.map((row) => [...row])
+            : [["", ""]],
+        rowMeta: Array.isArray(node.data.rowMeta)
+            ? node.data.rowMeta.map((meta) => ({ ...meta }))
+            : [],
+        dataModeRows: Array.isArray(node.data.dataModeRows) && node.data.dataModeRows.length
+            ? node.data.dataModeRows.map((row) => [...row])
+            : [[""]],
+    },
+});
+
+const cloneInitialEdge = (edge: Edge): Edge => ({
+    ...edge,
+    data: edge.data ? { ...edge.data } : edge.data,
+});
+
+export const createInitialNodes = (): Node<TableNodeData>[] =>
+    initialNodeTemplate.map((node) => cloneInitialNode(node));
+
+export const createInitialEdges = (): Edge[] =>
+    initialEdgeTemplate.map((edge) => cloneInitialEdge(edge));
+
+const CanvasProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [projectName, setProjectName] = useState('Undefined');
     const [mode, setMode] = useState<Mode>("build");
     const [messageApi, contextHolder] = message.useMessage();
@@ -115,12 +153,17 @@ export const CanvasProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     const initialState = () => {
         const saved = localStorage.getItem(projectName);
-        if (!saved) return { nodes: initialNodes, edges: initialEdges, viewport: undefined }
+        if (!saved) return { nodes: createInitialNodes(), edges: createInitialEdges(), viewport: undefined };
 
         try {
-            return JSON.parse(saved);
+            const parsed = JSON.parse(saved);
+            return {
+                nodes: Array.isArray(parsed.nodes) ? parsed.nodes : createInitialNodes(),
+                edges: Array.isArray(parsed.edges) ? parsed.edges : createInitialEdges(),
+                viewport: parsed.viewport,
+            };
         } catch {
-            return { nodes: initialNodes, edges: initialEdges, viewport: undefined }
+            return { nodes: createInitialNodes(), edges: createInitialEdges(), viewport: undefined };
         }
     };
 
@@ -153,11 +196,12 @@ export const CanvasProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     // Callback to receive data from Canvas
     const handleCanvasData = useCallback(() => {
-        const formattedData = formatCanvasData(nodes, edges); // Format the data
+        const formattedData = formatCanvasData(nodes, edges, projectName);
         setCanvasData(formattedData); // Store the formatted data in state
         // change this later on to send request to schema maker
         console.log("Formatted Canvas Data:", formattedData); // Log or send the data
-    }, [nodes, edges]);
+        return formattedData;
+    }, [nodes, edges, projectName]);
 
     const onNodesChange: OnNodesChange = (changes) => {
         setNodes((nds) => applyNodeChanges(changes, nds));
@@ -228,7 +272,32 @@ export const CanvasProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
 
     return (
-        <CanvasContext.Provider value={{ projectName, mode, setMode, nodes, setNodes, edges, setEdges, onNodesChange, handleCanvasData, viewport, setViewport, updateNodeData, selectedNodes, selectedEdge, setSelectedNodes, setSelectedEdge, deleteSelectedNodes, contextHolder, menuPos, setMenuPos, deleteSelectedEdge, copySelectedNodes, pasteNodes }}>
+        <CanvasContext.Provider value={{
+            projectName,
+            setProjectName,
+            mode,
+            setMode,
+            nodes,
+            setNodes,
+            edges,
+            setEdges,
+            onNodesChange,
+            handleCanvasData,
+            viewport,
+            setViewport,
+            updateNodeData,
+            selectedNodes,
+            selectedEdge,
+            setSelectedNodes,
+            setSelectedEdge,
+            deleteSelectedNodes,
+            contextHolder,
+            menuPos,
+            setMenuPos,
+            deleteSelectedEdge,
+            copySelectedNodes,
+            pasteNodes
+        }}>
             {children}
         </CanvasContext.Provider>
     );
@@ -239,3 +308,5 @@ export const useCanvasContext = () => {
     if (!ctx) throw new Error("useCanvasContext must be used within a CanvasProvider");
     return ctx;
 };
+
+export { CanvasProvider };

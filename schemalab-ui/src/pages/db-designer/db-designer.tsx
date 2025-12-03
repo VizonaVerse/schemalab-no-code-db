@@ -1,32 +1,73 @@
-import { useState } from "react";
 import { Canvas } from "./canvas/canvas";
 import { Topbar } from "./topbar/topbar";
-import { TableNode } from "./elements/tableNode/table-node";
-import { OneToOneEdge } from "./elements/relationships/O2O";
-import { OneToManyEdge } from "./elements/relationships/O2M";
-import { ManyToManyEdge } from "./elements/relationships/M2M";
-import "./db-designer.scss";
 import { ReactFlowProvider } from "reactflow";
-import tableIcon from "../../assets/toolbox/table.svg";
-import { CanvasProvider } from "../../contexts/canvas-context";
+import "./db-designer.scss";
+import { useLocation, useParams } from "react-router-dom";
+import { useEffect } from "react";
+import { useCanvasContext, createInitialNodes, createInitialEdges } from "../../contexts/canvas-context";
+import axios from "axios";
+import { mapProjectToNodesEdges } from "../../utils/canvas-utils";
 
 export interface DbDesignerProps {
     example: string;
 }
 
 export function DbDesigner({ example }: DbDesignerProps) {
+    const location = useLocation();
+    const { id: projectId } = useParams();
+    const { setNodes, setEdges, setProjectName } = useCanvasContext();
+    const { projectName } = useCanvasContext();
+    const { nodes, edges } = useCanvasContext(); // <-- get nodes/edges from context
 
+    useEffect(() => {
+        async function loadProject() {
+            // Always clear previous canvas state first
+            setNodes([]);
+            setEdges([]);
+
+            let projectData = location.state?.projectData;
+            if (!projectData && projectId) {
+                const res = await axios.get(`http://localhost:6060/api/projects/${projectId}/`);
+                projectData = res.data;
+            }
+            if (projectData && projectData.data && projectData.data.canvas) {
+                const { nodes, edges } = mapProjectToNodesEdges(projectData);
+                setNodes(nodes);
+                setEdges(edges);
+                setProjectName(
+                    projectData.name ||
+                    projectData.data.projectName ||
+                    projectData.projectName ||
+                    "Untitled Project"
+                );
+            } else if (!projectId) {
+                // Reset canvas for new project to initial state
+                setNodes(createInitialNodes());
+                setEdges(createInitialEdges());
+                setProjectName("New Project");
+            }
+        }
+        loadProject();
+    }, [location.state, setNodes, setEdges, setProjectName, projectId]);
+
+    useEffect(() => {
+        // Log finalised nodes and edges whenever they change
+        console.log("Finalised nodes:", nodes);
+        console.log("Finalised edges:", edges);
+    }, [nodes, edges]);
+
+    // Add a derived key that changes when projectId or projectName changes
+    const canvasKey = `${projectId || "new"}-${projectName}`;
+
+    // Force reload by changing key on top-level div
     return (
         <div className="db-designer">
-            <CanvasProvider>
-                <Topbar projectName="Test" />
-                <div className="canvas">
-                    {/* Wrapped canvas in reactflow provider which allows us to get coordinates of mouse on canvas */}
-                    <ReactFlowProvider>
-                        <Canvas />
-                    </ReactFlowProvider>
-                </div>  
-            </CanvasProvider>
+            <Topbar projectName={projectName} />
+            <div className="canvas">
+                <ReactFlowProvider key={canvasKey}>
+                    <Canvas key={canvasKey} />
+                </ReactFlowProvider>
+            </div>
         </div>
     );
 }
