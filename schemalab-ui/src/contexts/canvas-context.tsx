@@ -59,19 +59,19 @@ export const initialNodes: Node[] = [
     {
         id: "1",
         type: "tableNode",
-        data: { label: "Table 1" },
+        data: { label: "Table 1", tableData: [["", ""]], rowMeta: [], dataModeRows: [[""]] },
         position: { x: 250, y: 0 },
     },
     {
         id: "2",
         type: "tableNode",
-        data: { label: "Table 2" },
+        data: { label: "Table 2", tableData: [["", ""]], rowMeta: [], dataModeRows: [[""]] },
         position: { x: 100, y: 100 },
     },
     {
         id: "3",
         type: "tableNode",
-        data: { label: "Table 3" },
+        data: { label: "Table 3", tableData: [["", ""]], rowMeta: [], dataModeRows: [[""]] },
         position: { x: 400, y: 100 },
     },
 ];

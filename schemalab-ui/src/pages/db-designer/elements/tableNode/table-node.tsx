@@ -211,6 +211,14 @@ export const TableNode = ({
 
   const isBuildMode = mode === "build";
 
+  useEffect(() => {
+    // Sync initial tableData to node data if not present
+    if (!data.tableData || data.tableData.length === 0) {
+      updateNodeData(id, { tableData });
+    }
+    // eslint-disable-next-line
+  }, []);
+
   return (
     <div className={`table-node ${isBuildMode ? 'build-mode' : 'data-mode'} ${isSelected ? 'selected' : ''}`} ref={containerRef}>
       <h4 className="table-title" onDoubleClick={handleDoubleClickTableName}>
