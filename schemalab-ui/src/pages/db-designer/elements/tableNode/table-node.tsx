@@ -63,15 +63,29 @@ export const TableNode = ({
 
   // Sync dataModeRows column count with headers
   useEffect(() => {
+    const targetCols = Math.max(1, numColumns);
+
     setDataModeRows((prev) => {
-      const targetCols = Math.max(1, numColumns);
-      return prev.map((row) => {
-        const newRow = row.slice(0, targetCols);
-        while (newRow.length < targetCols) newRow.push("");
-        return newRow;
-      });
+      const next =
+        prev.length > 0
+          ? prev.map((row) => {
+              const resized = row.slice(0, targetCols);
+              while (resized.length < targetCols) resized.push("");
+              return resized;
+            })
+          : [Array.from({ length: targetCols }, () => "")];
+
+      const changed =
+        next.length !== prev.length ||
+        next.some((row, idx) => row.length !== (prev[idx]?.length ?? 0));
+
+      if (changed) {
+        updateNodeData(id, { tableData, rowMeta, dataModeRows: next });
+        return next;
+      }
+      return prev;
     });
-  }, [numColumns]);
+  }, [numColumns, id, tableData, rowMeta, updateNodeData]);
 
   const handleDoubleClickTableName = () => {
     const newName = prompt("Edit table name:", tableName);
