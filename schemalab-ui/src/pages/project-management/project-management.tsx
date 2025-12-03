@@ -88,44 +88,95 @@ const ProjectCard = ({ id, name, description, data, messageApi }: ProjectCardPro
 };
 
 function renderMiniDiagram(data: any) {
-    if (!data || !data.data || !data.data.canvas) return <span>No diagram</span>;
-    const { tables, relationships } = data.data.canvas;
+    if (!data?.data?.canvas) return <span>No diagram</span>;
+
+    const { tables = [], relationships = [] } = data.data.canvas;
+    if (!tables.length) return <span>No diagram</span>;
+
+    const VIEW_W = 200;
+    const VIEW_H = 150;
+    const PADDING = 1;
+    const tableSize = { w: 40, h: 26 };
+
+    type PositionedTable = { id: string; x: number; y: number };
+
+    const positionedTables: PositionedTable[] = tables.map((table: any, index: number) => {
+        const pos = table.position || { x: 0, y: 0 };
+        const id = String(table.id ?? table.uuid ?? table.name ?? index);
+        return {
+            id,
+            x: pos.x,
+            y: pos.y,
+        };
+    });
+
+    const minX = Math.min(...positionedTables.map((p) => p.x));
+    const minY = Math.min(...positionedTables.map((p) => p.y));
+    const maxX = Math.max(...positionedTables.map((p) => p.x + tableSize.w));
+    const maxY = Math.max(...positionedTables.map((p) => p.y + tableSize.h));
+
+    const spanX = Math.max(maxX - minX, 1);
+    const spanY = Math.max(maxY - minY, 1);
+
+    const scale = Math.min(
+        1,
+        (VIEW_W - PADDING * 2) / spanX,
+        (VIEW_H - PADDING * 2) / spanY
+    );
+
+    const scaledTables: PositionedTable[] = positionedTables.map((table) => ({
+        id: table.id,
+        x: (table.x - minX) * scale + PADDING,
+        y: (table.y - minY) * scale + PADDING,
+    }));
+
+    const centerById = new Map<string, { cx: number; cy: number }>(
+        scaledTables.map((t) => [
+            t.id,
+            { cx: t.x + tableSize.w * scale / 2, cy: t.y + tableSize.h * scale / 2 },
+        ])
+    );
+
     return (
-        <svg viewBox="0 0 200 150" className="mini-diagram">
-            {tables.map((table: any, idx: number) => (
-                <rect
-                    key={table.id}
-                    x={30 + idx * 60}
-                    y={40}
-                    width="40"
-                    height="30"
-                    fill="#e0e0e0"
-                    stroke="#1976d2"
-                    strokeWidth="2"
-                    rx="4"
-                />
-            ))}
-            {relationships.map((rel: any, idx: number) => {
-                // Find indices of source and target tables
-                const sourceIdx = tables.findIndex((t: any) => t.id === rel.source);
-                const targetIdx = tables.findIndex((t: any) => t.id === rel.target);
+        <svg viewBox={`0 0 ${VIEW_W} ${VIEW_H}`} className="mini-diagram">
+            <defs>
+                <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feDropShadow dx="0" dy="1" stdDeviation="1" floodOpacity="0.2" />
+                </filter>
+            </defs>
 
-                // Fallback to 0 if not found
-                const x1 = 50 + (sourceIdx >= 0 ? sourceIdx : 0) * 60;
-                const x2 = 50 + (targetIdx >= 0 ? targetIdx : 0) * 60;
-
+            {relationships.map((rel: any) => {
+                const source = centerById.get(String(rel.source));
+                const target = centerById.get(String(rel.target));
+                if (!source || !target) return null;
                 return (
                     <line
-                        key={rel.id}
-                        x1={x1}
-                        y1={55}
-                        x2={x2}
-                        y2={55}
-                        stroke="#666"
+                        key={rel.id ?? `${rel.source}-${rel.target}`}
+                        x1={source.cx}
+                        y1={source.cy}
+                        x2={target.cx}
+                        y2={target.cy}
+                        stroke="#9aa4b2"
                         strokeWidth="1.5"
+                        strokeLinecap="round"
                     />
                 );
             })}
+
+            {scaledTables.map((table) => (
+                <g key={table.id} filter="url(#shadow)">
+                    <rect
+                        x={table.x}
+                        y={table.y}
+                        width={tableSize.w * scale}
+                        height={tableSize.h * scale}
+                        rx="4"
+                        fill="#f3f4f6"
+                        stroke="#2563eb"
+                        strokeWidth="1.5"
+                    />
+                </g>
+            ))}
         </svg>
     );
 }
