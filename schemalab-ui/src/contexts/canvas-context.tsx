@@ -8,7 +8,7 @@ type Mode = "build" | "data";
 
 export interface CanvasContextType {
     projectName: string;
-    setProjectName: (name: string) => void; // <-- Add this line
+    setProjectName: (name: string) => void;
     mode: Mode;
     setMode: (mode: Mode) => void;
     nodes: Node[];
