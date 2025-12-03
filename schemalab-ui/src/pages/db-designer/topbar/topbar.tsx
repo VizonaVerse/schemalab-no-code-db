@@ -13,13 +13,14 @@ import axios from "axios"; // Import axios for HTTP requests
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { useAuth } from '../../../contexts/auth-context';
 import type { MenuProps } from 'antd';
+import { formatCanvasData } from "../../../utils/canvas-utils";
 
 export interface TopBarProps {
     projectName?: string;
 }
 
 export const Topbar = ({ projectName }: TopBarProps) => {
-    const { mode, setMode, handleCanvasData, nodes, setNodes, deleteSelectedNodes, copySelectedNodes, pasteNodes, setProjectName } = useCanvasContext();
+    const { mode, setMode, handleCanvasData, nodes, edges, setNodes, deleteSelectedNodes, copySelectedNodes, pasteNodes, setProjectName } = useCanvasContext();
     const { fetchProjects } = useAuth();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [inputName, setInputName] = useState(projectName); // <-- Use context value
@@ -43,33 +44,32 @@ export const Topbar = ({ projectName }: TopBarProps) => {
     };
 
     const handleModalOk = async () => {
-        if (!inputName || inputName.trim() === "") {
+        const nameToSave = (inputName || projectName || "Untitled Project").trim();
+        if (!nameToSave) {
             messageApi.warning("Project name cannot be empty.");
             return;
         }
+
         try {
-            const formattedData = handleCanvasData();
-            console.log("Formatted Canvas Data for saving:", formattedData);
+            setProjectName(nameToSave);                     // update context first
+            const formattedData = formatCanvasData(nodes, edges, nameToSave); // use new name
 
             if (projectId) {
-                // Update existing project
-                console.log("Updating project with ID:", projectId);
                 await axios.put(`http://localhost:6060/api/projects/${projectId}/`, {
-                    name: inputName,
+                    name: nameToSave,
                     description: inputDescription,
                     data: formattedData,
                 });
                 messageApi.success("Project updated successfully!");
             } else {
-                // Create new project
-                await axios.post('http://localhost:6060/api/projects/', {
-                    name: inputName,
+                await axios.post("http://localhost:6060/api/projects/", {
+                    name: nameToSave,
                     description: inputDescription,
                     data: formattedData,
                 });
                 messageApi.success("Canvas data saved successfully!");
             }
-            setProjectName(inputName || "Untitled Project"); // <-- Update context once, after save
+
             setIsModalOpen(false);
         } catch (error: any) {
             const backendMsg =
