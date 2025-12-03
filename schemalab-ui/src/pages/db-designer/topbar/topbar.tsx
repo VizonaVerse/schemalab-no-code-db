@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import "./topbar.scss"; // Import CSS for styling
 import { Node, NodeProps } from "reactflow";
 import Logo from "../../../assets/schemalab-logo-no-text.svg";
@@ -42,6 +42,54 @@ export const Topbar = ({ projectName }: TopBarProps) => {
     const { id: projectId } = useParams(); // <-- Get id from URL params
 
     const [messageApi, contextHolder] = message.useMessage();
+    const autoSaveMessageKey = "auto-save";
+
+    const latestCanvasRef = useRef({
+        nodes,
+        edges,
+        projectName: projectName || "Untitled Project",
+    });
+
+    useEffect(() => {
+        latestCanvasRef.current = {
+            nodes,
+            edges,
+            projectName: projectName || "Untitled Project",
+        };
+    }, [nodes, edges, projectName]);
+
+    useEffect(() => {
+        if (!projectId) return;
+
+        const interval = setInterval(async () => {
+            const { nodes: latestNodes, edges: latestEdges, projectName: latestName } = latestCanvasRef.current;
+            const nameToSave = (latestName || "Untitled Project").trim() || "Untitled Project";
+
+            try {
+                const formattedData = formatCanvasData(latestNodes, latestEdges, nameToSave);
+                await axios.put(`http://localhost:6060/api/projects/${projectId}/`, {
+                    name: nameToSave,
+                    description: inputDescription,
+                    data: formattedData,
+                });
+                messageApi.open({
+                    key: autoSaveMessageKey,
+                    type: "success",
+                    content: "Auto-save complete.",
+                    duration: 1,
+                });
+            } catch (error) {
+                messageApi.open({
+                    key: autoSaveMessageKey,
+                    type: "error",
+                    content: "Auto-save failed. Changes may be unsaved.",
+                    duration: 3,
+                });
+            }
+        }, 120000); // Auto-save every 2 minutes.
+
+        return () => clearInterval(interval);
+    }, [projectId, inputDescription, messageApi]);
 
     useEffect(() => {
         setInputName(projectName); // Always sync inputName with context
