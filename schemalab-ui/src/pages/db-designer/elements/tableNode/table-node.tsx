@@ -31,7 +31,9 @@ export const TableNode = ({
   const rowHeight = 28.5;
   const MAX_BUILD_ROWS = 7;
   const [tableName, setTableName] = useState(data.label);
-  const [tableData, setTableData] = useState(data.tableData || Array.from({ length: 1 }).map(() => ["", ""]));
+  const [tableData, setTableData] = useState(data.tableData ?? [["", ""]]);
+  const [rowMeta, setRowMeta] = useState<RowMeta[]>(data.rowMeta ?? []);
+  const [dataModeRows, setDataModeRows] = useState<string[][]>(data.dataModeRows ?? [[""]]);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   const isSelected = selectedNodes?.some(n => n.id === id);
@@ -44,10 +46,6 @@ export const TableNode = ({
     unique: false,
     default: "",
   });
-
-  const [rowMeta, setRowMeta] = useState<RowMeta[]>(
-    () => tableData.map(() => defaultMeta())
-  );
 
   // Sync rowMeta length with tableData length
   useEffect(() => {
@@ -62,10 +60,6 @@ export const TableNode = ({
   // Get first column from build mode, and display as data mode headers
   const headers = tableData.map(row => row[0] || "");
   const numColumns = headers.length;
-
-  const [dataModeRows, setDataModeRows] = useState<string[][]>(
-    data.dataModeRows || Array.from({ length: 1 }).map(() => Array.from({ length: Math.max(1, numColumns) }).map(() => ""))
-  );
 
   // Sync dataModeRows column count with headers
   useEffect(() => {
@@ -218,6 +212,13 @@ export const TableNode = ({
     }
     // eslint-disable-next-line
   }, []);
+
+  useEffect(() => {
+    setTableName(data.label ?? "");
+    setTableData(data.tableData ?? [["", ""]]);
+    setRowMeta(data.rowMeta ?? []);
+    setDataModeRows(data.dataModeRows ?? [[""]]);
+  }, [data.label, data.tableData, data.rowMeta, data.dataModeRows]);
 
   return (
     <div className={`table-node ${isBuildMode ? 'build-mode' : 'data-mode'} ${isSelected ? 'selected' : ''}`} ref={containerRef}>
