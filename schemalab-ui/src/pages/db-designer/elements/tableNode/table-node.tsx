@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect, useLayoutEffect } from "react";
+import React, { useRef, useState, useEffect, useLayoutEffect, useCallback } from "react";
 import { Handle, Position, useViewport } from "reactflow";
 import "reactflow/dist/style.css";
 import "./table-node.scss";
@@ -65,6 +65,7 @@ export const TableNode = ({
   const typeTriggerRef = useRef<HTMLButtonElement | null>(null);
   const attrCellRefs = useRef<(HTMLTableCellElement | null)[]>([]);
   const [popoverTop, setPopoverTop] = useState<number>(0);
+  const [handleOffsets, setHandleOffsets] = useState<number[]>([]);
 
   const isSelected = selectedNodes?.some(n => n.id === id);
 
@@ -293,9 +294,48 @@ export const TableNode = ({
     setDataModeRows(data.dataModeRows ?? [[""]]);
   }, [data.label, data.tableData, data.rowMeta, data.dataModeRows]);
 
+  const measureHandleOffsets = useCallback(() => {
+    const containerEl = containerRef.current;
+    if (!containerEl) return;
+
+    const containerRect = containerEl.getBoundingClientRect();
+    const next = attrCellRefs.current.map((cell) => {
+      if (!cell) return 0;
+      const rect = cell.getBoundingClientRect();
+      return ((rect.top - containerRect.top) + rect.height / 2) / (zoom || 1);
+    });
+
+    setHandleOffsets((prev) => {
+      if (
+        prev.length === next.length &&
+        prev.every((val, idx) => Math.abs(val - next[idx]) < 0.5)
+      ) {
+        return prev;
+      }
+      return next;
+    });
+  }, [zoom]);
+
   useEffect(() => {
     attrCellRefs.current = attrCellRefs.current.slice(0, tableData.length);
-  }, [tableData.length]);
+    if (isBuildMode) {
+      requestAnimationFrame(() => measureHandleOffsets());
+    }
+  }, [tableData.length, isBuildMode, measureHandleOffsets]);
+
+  useEffect(() => {
+    if (!isBuildMode) return;
+    if (typeof ResizeObserver === "undefined") return;
+    const node = containerRef.current;
+    if (!node) return;
+
+    const observer = new ResizeObserver(() => {
+      measureHandleOffsets();
+    });
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [isBuildMode, measureHandleOffsets]);
 
   useEffect(() => {
     const portalHost = document.createElement("div");
@@ -614,7 +654,7 @@ export const TableNode = ({
               position={Position.Left}
               id={`row-${rowIndex}-left`}
               style={{
-                top: `${rowIndex * rowHeight + 65}px`,
+                top: `${handleOffsets[rowIndex] ?? rowIndex * rowHeight + 65}px`,
                 left: "-4px",
               }}
             />
@@ -623,7 +663,7 @@ export const TableNode = ({
               position={Position.Right}
               id={`row-${rowIndex}-right`}
               style={{
-                top: `${rowIndex * rowHeight + 65}px`,
+                top: `${handleOffsets[rowIndex] ?? rowIndex * rowHeight + 65}px`,
                 right: "-4px",
               }}
             />
