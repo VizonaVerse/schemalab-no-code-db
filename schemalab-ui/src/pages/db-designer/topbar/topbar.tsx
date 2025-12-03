@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import "./topbar.scss"; // Import CSS for styling
 import { Node, NodeProps } from "reactflow";
 import Logo from "../../../assets/schemalab-logo-no-text.svg";
@@ -13,14 +13,26 @@ import axios from "axios"; // Import axios for HTTP requests
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { useAuth } from '../../../contexts/auth-context';
 import type { MenuProps } from 'antd';
-import { formatCanvasData } from "../../../utils/canvas-utils";
+import { formatCanvasData, mapProjectToNodesEdges } from "../../../utils/canvas-utils";
 
 export interface TopBarProps {
     projectName?: string;
 }
 
 export const Topbar = ({ projectName }: TopBarProps) => {
-    const { mode, setMode, handleCanvasData, nodes, edges, setNodes, deleteSelectedNodes, copySelectedNodes, pasteNodes, setProjectName } = useCanvasContext();
+    const {
+        mode,
+        setMode,
+        handleCanvasData,
+        nodes,
+        edges,
+        setNodes,
+        setEdges,
+        deleteSelectedNodes,
+        copySelectedNodes,
+        pasteNodes,
+        setProjectName,
+    } = useCanvasContext();
     const { fetchProjects } = useAuth();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [inputName, setInputName] = useState(projectName); // <-- Use context value
@@ -51,8 +63,8 @@ export const Topbar = ({ projectName }: TopBarProps) => {
         }
 
         try {
-            setProjectName(nameToSave);                     // update context first
-            const formattedData = formatCanvasData(nodes, edges, nameToSave); // use new name
+            setProjectName(nameToSave);
+            const formattedData = formatCanvasData(nodes, edges, nameToSave);
 
             if (projectId) {
                 await axios.put(`http://localhost:6060/api/projects/${projectId}/`, {
@@ -60,14 +72,28 @@ export const Topbar = ({ projectName }: TopBarProps) => {
                     description: inputDescription,
                     data: formattedData,
                 });
+                await fetchProjects();
                 messageApi.success("Project updated successfully!");
             } else {
-                await axios.post("http://localhost:6060/api/projects/", {
+                const { data: createdProject } = await axios.post("http://localhost:6060/api/projects/", {
                     name: nameToSave,
                     description: inputDescription,
                     data: formattedData,
                 });
+
+                const mapped = mapProjectToNodesEdges({ data: formattedData.data, name: nameToSave });
+                setNodes(mapped.nodes);
+                setEdges(mapped.edges);
+                setProjectName(nameToSave);
+
+                await fetchProjects();
                 messageApi.success("Canvas data saved successfully!");
+
+                if (createdProject?.id) {
+                    navigate(`/dev/db-designer/${createdProject.id}`, {
+                        state: { projectData: { ...createdProject, data: formattedData.data } },
+                    });
+                }
             }
 
             setIsModalOpen(false);
@@ -86,22 +112,26 @@ export const Topbar = ({ projectName }: TopBarProps) => {
         setIsModalOpen(false);
     };
 
-    const items: MenuProps['items'] = [
+    const handleRenameClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+        e.preventDefault();
+        if (projectId) {
+            setIsModalOpen(true);
+        }
+    };
+
+    const items: MenuProps['items'] = useMemo(() => ([
         {
             key: 1,
-            label: (<a>
-                New
-            </a>)
-            // open new tab with new canvas
+            label: (<a>New</a>)
         },
         {
             key: 2,
-            label: (<a onClick={handleSaveClick}>Save</a>) // Open modal on click
+            label: (<a onClick={handleSaveClick}>Save</a>)
         },
-        {
+        projectId ? {
             key: 3,
-            label: 'Properties'
-        },
+            label: (<a onClick={handleRenameClick}>Rename</a>)
+        } : null,
         {
             key: 4,
             label: (<a onClick={(e) => {
@@ -123,7 +153,7 @@ export const Topbar = ({ projectName }: TopBarProps) => {
                 </a>
             ),
         },
-    ];
+    ].filter(Boolean) as MenuProps['items']), [projectId, handleSaveClick]);
 
     const addTable = () => {
         const offset = 50;
