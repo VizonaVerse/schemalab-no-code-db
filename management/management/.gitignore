@@ -1,1 +1,16 @@
-Add-Content -Path .\management\.gitignore -Value "media/" 
+media/
+# Ignore Python bytecode files and caches
+__pycache__/
+*.py[cod]
+*.pyc
+*$py.class
+
+# pytest cache
+.pytest_cache/
+
+# Optional: virtual envs and editor folders
+venv/
+env/
+.venv/
+.idea/
+.vscode/
