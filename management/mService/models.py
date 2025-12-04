@@ -2,7 +2,7 @@ from django.db import models
 from django.core.validators import RegexValidator
 
 alnum_validator = RegexValidator(
-    regex=r'^[A-Za-z0-9]+$',
+    regex=r'^[A-Za-z0-9]+(?: [A-Za-z0-9]+)*$',
     message='Project name may contain only English letters (A-Z, a-z) and numbers (0-9).'
 )
 
