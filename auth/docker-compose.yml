@@ -27,7 +27,10 @@ services:
   auth-service:
     build: .  
     container_name: auth_service
-    command: python manage.py runserver 0.0.0.0:5050
+    command: >
+      sh -c "sleep 5 && 
+             python manage.py migrate --no-input && 
+             python manage.py runserver 0.0.0.0:5050"
     #volumes:
     #  - .:/app  # This maps your local code into the container for live-reloading
 
