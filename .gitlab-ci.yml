@@ -8,14 +8,14 @@ workflow:
 stages:
   - trigger
   
-trigger_schemalab-ui:
-  stage: trigger
-  rules:
-    - changes:
-      - schemalab-ui/**
-  trigger:
-    include: schemalab-ui/.gitlab-ci.yml
-    strategy: depend
+# trigger_schemalab-ui:
+#   stage: trigger
+#   rules:
+#     - changes:
+#       - schemalab-ui/**
+#   trigger:
+#     include: schemalab-ui/.gitlab-ci.yml
+#     strategy: depend
 
 trigger_schema:
   stage: trigger
