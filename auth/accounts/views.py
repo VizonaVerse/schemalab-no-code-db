@@ -58,6 +58,7 @@ class ProfileView(APIView):
             'username': user.username,
             'email': user.email
         }
+
         return Response(data)
     
 class LogoutView(APIView):
@@ -116,6 +117,11 @@ class PasswordResetRequestView(APIView):
         serializer = PasswordResetRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         email = serializer.validated_data['email']
+
+        try:
+            payload = request.data['data']
+        except KeyError:
+            payload = request.data
         
         try:
             user = User.objects.get(email=email)
@@ -149,11 +155,6 @@ class PasswordResetRequestView(APIView):
             print(f"ERROR: Could not send email. Exception: {e}")
             message_text = 'Password reset link sent (but failed to connect to email service).'
 
-        try:
-            payload = request.data['data']
-        except KeyError:
-            payload = request.data
-
         serializer = PasswordResetRequestSerializer(data=payload)
 
         return Response({'message': message_text}, 
@@ -175,16 +176,16 @@ class PasswordResetConfirmView(APIView):
         new_password = serializer.validated_data['new_password']
 
         try:
+                    payload = request.data['data']
+        except KeyError:
+                    payload = request.data
+
+        try:
             # 1. Decode the user ID (UID) from the link
             uid = force_str(urlsafe_base64_decode(uidb64))
             user = User.objects.get(pk=uid)
         except (TypeError, ValueError, OverflowError, User.DoesNotExist):
             user = None
-
-        try:
-                    payload = request.data['data']
-        except KeyError:
-                    payload = request.data
                 
         serializer = PasswordResetConfirmSerializer(data=payload)
         
@@ -215,6 +216,13 @@ class PasswordChangeView(APIView):
 
         old_password = serializer.validated_data['old_password']
         new_password = serializer.validated_data['new_password']
+
+        try:
+            payload = request.data['data']
+        except KeyError:
+            payload = request.data
+        
+        serializer = self.serializer_class(data=payload)
 
         if not user.check_password(old_password):
             return Response({'error': 'Old password is not correct.'}, 
