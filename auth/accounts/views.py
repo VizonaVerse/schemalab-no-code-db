@@ -31,6 +31,19 @@ class RegisterView(generics.CreateAPIView):
     permission_classes = (AllowAny,)
     serializer_class = RegisterSerializer
 
+    def create(self, request, *args, **kwargs):
+        try:
+            payload = request.data['data']
+        except KeyError:
+            payload = request.data
+        
+        serializer = self.get_serializer(data=payload)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
 class ProfileView(APIView):
     """
     A protected endpoint to view the current user's profile.
@@ -67,7 +80,29 @@ class LogoutView(APIView):
             return Response(status=status.HTTP_400_BAD_REQUEST)
         
 class MyTokenObtainPairView(TokenObtainPairView):
+    """
+    An endpoint to obtain JWT tokens using email and password.
+    """
     serializer_class = MyTokenObtainPairSerializer
+
+    def post(self, request, *args, **kwargs):
+       
+        try:
+            login_payload = request.data['data']
+        except KeyError:
+            login_payload = request.data
+
+        serializer = self.get_serializer(data=login_payload)
+        
+        try:
+            serializer.is_valid(raise_exception=True)
+        except Exception as e:
+            return Response(
+                {'error': 'Invalid credentials or malformed data.'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        return Response(serializer.validated_data, status=status.HTTP_200_OK)
 
 class PasswordResetRequestView(APIView):
     """
@@ -114,15 +149,16 @@ class PasswordResetRequestView(APIView):
             print(f"ERROR: Could not send email. Exception: {e}")
             message_text = 'Password reset link sent (but failed to connect to email service).'
 
+        try:
+            payload = request.data['data']
+        except KeyError:
+            payload = request.data
+
+        serializer = PasswordResetRequestSerializer(data=payload)
 
         return Response({'message': message_text}, 
                         status=status.HTTP_200_OK)
 
-        # print("-" * 50)
-        # print(f"PASSWORD RESET LINK FOR {user.email}:")
-        # print(reset_link)
-        # print("-" * 50)
-    
 class PasswordResetConfirmView(APIView):
     """
     Handles confirming the password reset (POST /password-reset/confirm/).
@@ -145,6 +181,13 @@ class PasswordResetConfirmView(APIView):
         except (TypeError, ValueError, OverflowError, User.DoesNotExist):
             user = None
 
+        try:
+                    payload = request.data['data']
+        except KeyError:
+                    payload = request.data
+                
+        serializer = PasswordResetConfirmSerializer(data=payload)
+        
         # 2. Check if the user exists and if the token is valid
         if user is not None and default_token_generator.check_token(user, token):
             # 3. Token is valid! Set the new password and save.
@@ -156,6 +199,7 @@ class PasswordResetConfirmView(APIView):
             # 4. Token is invalid or expired
             return Response({'error': 'Invalid reset link or token has expired.'}, 
                             status=status.HTTP_400_BAD_REQUEST)
+        
         
 class PasswordChangeView(APIView):
     """
@@ -172,12 +216,19 @@ class PasswordChangeView(APIView):
         old_password = serializer.validated_data['old_password']
         new_password = serializer.validated_data['new_password']
 
+        try:
+            payload = request.data['data']
+        except KeyError:
+            payload = request.data
+
         if not user.check_password(old_password):
             return Response({'error': 'Old password is not correct.'}, 
                             status=status.HTTP_400_BAD_REQUEST)
 
         user.set_password(new_password)
         user.save()
+
+        serializer = self.serializer_class(data=payload)
         
         return Response({'message': 'Password updated successfully.'}, 
                         status=status.HTTP_200_OK)
