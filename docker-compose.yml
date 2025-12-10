@@ -6,10 +6,13 @@ services:
     command:
       - "--providers.docker=true"
       - "--entrypoints.web.address=:80"
+      - "--api.insecure=true"
     ports:
       - "80:80"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - app-network
 
   schemalabui:
     build: ./schemalab-ui
@@ -17,8 +20,10 @@ services:
      - ./schemalab-ui/.env
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.schemalabUI.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.schemalabUI.rule=Host(`group14.com3033.csee-systems.com`)"
       - "traefik.http.services.schemalabUI.loadbalancer.server.port=8080"
+    networks:
+      - app-network
   
   schema:
     build: ./schema
