@@ -23,21 +23,23 @@ router.post('/', async (req, res, next) => {
     try {
         var SqlString = await sql.generateSQL(canvas)
     } catch(err) {
-        return res.status(err.httpCode).json({
-            code: err.httpCode,
-            message: err.message,
-            errorCode: err.code,
-            data: err.data,
+        const statusCode = err.httpCode || 500;
+        return res.status(statusCode).json({
+            code: statusCode,
+            message: err.message || 'Unable to generate SQL from canvas data',
+            errorCode: err.code || 'SQL_GENERATION_FAILED',
+            data: err.data || {},
             time: getDate(),
         });
     }
     try {
         var result = await file.deleteFiles()
     }catch(err) {
-        return res.status(err.httpCode).json({
-            code: err.httpCode,
-            message: err.message,
-            errorCode: err.code,
+        const statusCode = err.httpCode || 500;
+        return res.status(statusCode).json({
+            code: statusCode,
+            message: err.message || 'Unable to clean temporary files',
+            errorCode: err.code || 'FILE_DELETE_FAILED',
             data: {}, // can send back additional data later
             time: getDate(),
         });
@@ -46,18 +48,20 @@ router.post('/', async (req, res, next) => {
     var result = await file.generateFiles(SqlString, ProjectName, 0) // placeholder ttl value
     if (result.failed == true) {
         if (result.code == "V00") {
-        return res.status(result.httpCode).json({
-                code: result.httpCode,
-                message: result.message,
-                errorCode: result.code,
-                data: {}, // can send back additional data later
+        const statusCode = result.httpCode || 400;
+        return res.status(statusCode).json({
+            code: statusCode,
+            message: result.message || 'Validation failed',
+            errorCode: result.code || 'VALIDATION_ERROR',
+            data: {}, // can send back additional data later
                 time: getDate(),
             });
         } else if (result.code == "V01") {
-            return res.status(result.httpCode).json({
-                code: result.httpCode,
-                message: result.message,
-                errorCode: result.code,
+            const statusCode = result.httpCode || 400;
+            return res.status(statusCode).json({
+                code: statusCode,
+                message: result.message || 'Validation failed',
+                errorCode: result.code || 'VALIDATION_ERROR',
                 data: {}, // can send back additional data later
                 time: getDate(),
             });
@@ -75,20 +79,22 @@ router.post('/', async (req, res, next) => {
 });
 
 router.get('/DB', async (req, res, next) => {
-    try{
-        var {data} = req.body
-    }catch (err){
+    const fileName = typeof req.query.fileName === "string" && req.query.fileName.trim()
+        ? req.query.fileName.trim()
+        : (req.body?.data?.fileName || "");
+
+    if (!fileName) {
         return res.status(400).json({
             code: 400,
-            message: err.message,
+            message: "File name is required",
             errorCode: "S00",
-            data: {}, // can send back additional data later
+            data: {},
             time: getDate(),
         });
     }
-    
-    file = path.resolve("tempFiles/" + data.fileName + ".db");
-    res.sendFile(file, function (err) {
+
+    const resolvedPath = path.resolve("tempFiles/" + fileName + ".db");
+    res.sendFile(resolvedPath, function (err) {
         if (err) {
             return res.status(400).json({
                 code: 400,
@@ -99,24 +105,25 @@ router.get('/DB', async (req, res, next) => {
             });
         }
     });
-    res.status(200);
 });
 
 router.get('/SQL', async (req, res, next) => {
-    try{
-        var {data} = req.body
-    }catch (err){
+    const fileName = typeof req.query.fileName === "string" && req.query.fileName.trim()
+        ? req.query.fileName.trim()
+        : (req.body?.data?.fileName || "");
+
+    if (!fileName) {
         return res.status(400).json({
             code: 400,
-            message: err.message,
+            message: "File name is required",
             errorCode: "S00",
-            data: {}, // can send back additional data later
+            data: {},
             time: getDate(),
         });
     }
-    
-    file = path.resolve("tempFiles/" + data.fileName + ".sql");
-    res.sendFile(file, function (err) {
+
+    const resolvedPath = path.resolve("tempFiles/" + fileName + ".sql");
+    res.sendFile(resolvedPath, function (err) {
         if (err) {
             return res.status(400).json({
                 code: 400,
@@ -127,7 +134,6 @@ router.get('/SQL', async (req, res, next) => {
             });
         }
     });
-    res.status(200);
 });
 
 module.exports = router;

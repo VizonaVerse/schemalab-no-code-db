@@ -50,12 +50,6 @@ export function DbDesigner({ example }: DbDesignerProps) {
         loadProject();
     }, [location.state, setNodes, setEdges, setProjectName, projectId]);
 
-    useEffect(() => {
-        // Log finalised nodes and edges whenever they change
-        console.log("Finalised nodes:", nodes);
-        console.log("Finalised edges:", edges);
-    }, [nodes, edges]);
-
     // Add a derived key that changes when projectId or projectName changes
     const canvasKey = `${projectId || "new"}-${projectName}`;
 

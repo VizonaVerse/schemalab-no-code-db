@@ -1,10 +1,71 @@
 //var session = require('express-session');
 require('dotenv').config({ path: '.env' });
 
-const express = require('express')
-const app = express()
+const express = require('express');
+const cors = require('cors');
+const cookieParser = require('cookie-parser');
+
+const app = express();
+
+const allowedOriginsRaw = (process.env.FRONT_END_URL || '')
+  .split(',')
+  .map(origin => origin.trim())
+  .filter(Boolean);
+
+const normalizeOrigin = (origin) => {
+  if (!origin) return origin;
+  return origin.replace(/\/$/, '').toLowerCase();
+};
+
+const allowAllOrigins =
+  allowedOriginsRaw.length === 0 ||
+  allowedOriginsRaw.some(value => ['*', 'all'].includes(value.toLowerCase()));
+
+const fallbackDevOrigins = [
+  'http://localhost:3000',
+  'http://localhost:8080',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:8080',
+];
+
+const allowedOriginsNormalized = (allowAllOrigins ? [] : allowedOriginsRaw)
+  .map(normalizeOrigin)
+  .filter(Boolean);
+
+const effectiveAllowedOrigins = allowAllOrigins
+  ? []
+  : (allowedOriginsNormalized.length ? allowedOriginsNormalized : fallbackDevOrigins);
+
+if (!allowAllOrigins) {
+  console.log('CORS allowlist:', effectiveAllowedOrigins);
+} else {
+  console.log('CORS allowlist: * (all origins permitted)');
+}
+
+const corsOptions = {
+  origin: allowAllOrigins
+    ? true
+    : (origin, callback) => {
+        if (!origin) {
+          return callback(null, true);
+        }
+        const normalizedOrigin = normalizeOrigin(origin);
+        if (effectiveAllowedOrigins.includes(normalizedOrigin)) {
+          return callback(null, true);
+        }
+        console.warn('Blocked CORS origin:', origin);
+        return callback(new Error('Not allowed by CORS'));
+      },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
-const port = process.env.PORT
+app.use(cookieParser());
+
+const port = process.env.PORT;
 
 // example route (index.js file in routes)
 var indexRouter = require('./routes/index');
@@ -14,7 +75,7 @@ var buildRouter = require('./routes/build');
 // example route
 app.use('/', indexRouter);
 // add new routes here
-app.use('/build', buildRouter)
+app.use('/build', buildRouter);
 
 app.get('/tempFiles/:filename', (req, res) => {
     const filename = req.params.filename;
@@ -27,19 +88,6 @@ app.get('/tempFiles/:filename', (req, res) => {
         }
     });
 });
-
-const cors = require('cors');
-const cookieParser = require('cookie-parser');
-
-const corsOptions = {
-  origin: process.env.FRONT_END_URL, // Allow only specific origin
-  methods: 'GET, POST, PUT, DELETE, OPTIONS, PATCH',
-  allowedHeaders: 'Content-Type, Authorization',
-  credentials: true,
-};
-
-app.use(cors(corsOptions));
-app.use(cookieParser());
 
 // Setup express-session (currently redacted)
 // app.use(session({

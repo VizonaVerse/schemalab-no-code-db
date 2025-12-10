@@ -66,26 +66,72 @@ const initialNodeTemplate: Node<TableNodeData>[] = [
     {
         id: "1",
         type: "tableNode",
-        data: { label: "Table 1", tableData: [["", ""]], rowMeta: [], dataModeRows: [[""]] },
-        position: { x: 250, y: 0 },
+        data: {
+            label: "Table 1",
+            tableData: [["ID"]], // One row of table data
+            rowMeta: [
+                {
+                    type: "INT", // Default type
+                    nn: true,    // Not null
+                    pk: true,    // Primary key
+                    unique: true, // Unique
+                    default: "", // Default value
+                },
+            ],
+            dataModeRows: [[""]],
+        },
+        position: { x: 500, y: 0 },
     },
     {
         id: "2",
         type: "tableNode",
-        data: { label: "Table 2", tableData: [["", ""]], rowMeta: [], dataModeRows: [[""]] },
+        data: {
+            label: "Table 2",
+            tableData: [["ID"], ["Name"]],
+            rowMeta: [
+                {
+                    type: "INT",
+                    nn: true,
+                    pk: true,
+                    unique: true,
+                    default: "0",
+                },
+                {
+                    type: "TEXT",
+                    nn: true,
+                    pk: false,
+                    unique: false,
+                    default: "",
+                },
+            ],
+            dataModeRows: [[""]],
+        },
         position: { x: 100, y: 100 },
     },
-    {
-        id: "3",
-        type: "tableNode",
-        data: { label: "Table 3", tableData: [["", ""]], rowMeta: [], dataModeRows: [[""]] },
-        position: { x: 400, y: 100 },
-    },
+    // {
+    //     id: "3",
+    //     type: "tableNode",
+    //     data: {
+    //         label: "Table 3",
+    //         tableData: [["", ""]],
+    //         rowMeta: [
+    //             {
+    //                 type: "INT",
+    //                 nn: true,
+    //                 pk: true,
+    //                 unique: true,
+    //                 default: "",
+    //             },
+    //         ],
+    //         dataModeRows: [[""]],
+    //     },
+    //     position: { x: 400, y: 100 },
+    // },
 ];
 
 const initialEdgeTemplate: Edge[] = [
     { id: "e1-2", source: "1", sourceHandle: "row-0-left", target: "2", targetHandle: "row-1-right", type: "oneToManyEdge" },
-    { id: "e1-3", source: "1", sourceHandle: "row-2-left", target: "3", targetHandle: "row-0-right", type: "oneToOneEdge" },
+    // { id: "e1-3", source: "1", sourceHandle: "row-2-left", target: "3", targetHandle: "row-0-right", type: "oneToOneEdge" },
 ];
 
 export const initialNodes = initialNodeTemplate;

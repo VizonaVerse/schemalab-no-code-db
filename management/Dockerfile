@@ -20,6 +20,8 @@ COPY . /app
 
 COPY ./entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
+# Ensure entrypoint uses Unix line endings inside the image (fixes Windows CRLF issues)
+RUN sed -i 's/\r$//' /entrypoint.sh || true
 
 EXPOSE 6060
 

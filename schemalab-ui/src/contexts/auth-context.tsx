@@ -50,9 +50,20 @@ interface Project {
     id: number;
     name: string;
     description: string;
-    data?: any; // <-- Add this line
+    data?: any;
     created_at: string;
     updated_at: string;
+}
+
+interface Tokens {
+    access: string;
+    refresh: string;
+}
+
+interface AuthUser {
+    id: number;
+    username: string;
+    email: string;
 }
 
 const AuthContext = createContext<ProviderProps>({
@@ -311,21 +322,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const fetchProjects = async () => {
         try {
+            setLoading(true);
             const response = await GET(Services.MANAGEMENT, '/api/projects/');
             setProjects(response.data as unknown as Project[]);
         } catch (error) {
             console.error('Failed to fetch projects:', error);
+        } finally {
+            setLoading(false);
         }
     };
 
-    const deleteProject = async (id: number) => {
+    const deleteProject = async (id: number): Promise<void> => {
         await DELETE(Services.MANAGEMENT, `/api/projects/${id}/`);
-        // Optionally, refetch projects or remove from state
+        await fetchProjects();
     };
 
     useEffect(() => {
-        // Initialize user and fetch projects
-        fetchProjects().finally(() => setLoading(false));
+        fetchProjects();
     }, []);
 
 
