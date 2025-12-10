@@ -1,0 +1,133 @@
+.navbar {
+    display: flex;
+    background-color: #19647E;
+    height: 8vh;
+    justify-content: space-between;
+    align-items: center;
+
+    .logo {
+        height: 3rem;
+        margin-left: 2rem;
+        cursor: pointer;
+    }
+}
+
+.register {
+    display: flex;
+    justify-self: center;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    width: 55vw;
+    height: 92vh;
+
+    .heading {
+        margin-bottom: 3rem;
+    }
+
+    .input {
+        width: 100%;
+        margin-bottom: 1rem;
+
+        .label {
+            margin-left: 5px;
+            margin-bottom: 3px;
+        }
+
+        .input-box {
+            border: 5px solid #19647E;
+            padding: 0.7rem;
+            border-radius: 1rem;
+        }
+
+        .input-box.invalid {
+            box-shadow: 0 0 5px 2px red;
+        }
+    }
+
+    .validations {
+        margin-top: 2rem;
+        align-self: start;
+
+        .item {
+            margin-bottom: 0.5rem;
+
+            .message {
+                margin-left: 0.5rem;
+            }
+        }
+
+        .check {
+            color: green;
+        }
+
+        .cross {
+            color: red;
+        }
+    }
+}
+
+.login {
+    display: flex;
+    justify-self: center;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    width: 55vw;
+    height: 92vh;
+
+    .heading {
+        margin-bottom: 3rem;
+    }
+
+    .input {
+        width: 100%;
+        margin-bottom: 1rem;
+
+        .label {
+            margin-left: 5px;
+            margin-bottom: 3px;
+        }
+
+        .input-box {
+            border: 5px solid #19647E;
+            padding: 0.7rem;
+            border-radius: 1rem;
+        }
+
+        .input-box.invalid {
+            box-shadow: 0 0 5px 2px red;
+        }
+    }
+}
+
+.create {
+        margin-top: 3rem;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        align-items: center;
+
+        .comment {
+            margin-top: 1rem;
+        }
+
+        .link {
+            color: #1890ff;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        .link:hover {
+            color: #40a9ff;
+            text-decoration: underline;
+        }
+
+        .error {
+            background-color: red;
+        }
+
+        .error:hover {
+            background-color: red;
+        }
+    }
