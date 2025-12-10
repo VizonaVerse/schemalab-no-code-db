@@ -16,7 +16,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: bash -c "./entrypoint.sh python manage.py runserver 0.0.0.0:6060"
+    # Use the absolute path to the entrypoint copied into the image so the
+    # host bind-mount does not override it (prevents CRLF / permission issues).
+    command: bash -c "/entrypoint.sh python manage.py runserver 0.0.0.0:6060"
     volumes:
       - .:/app
       - ./media:/app/media
@@ -30,4 +32,3 @@ services:
       POSTGRES_PORT: ${POSTGRES_PORT:-5432}
 volumes:
   pgdata:
-  
