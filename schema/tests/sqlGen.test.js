@@ -25,7 +25,7 @@ describe("SQL generation tests", () => {
         var sql = await sqlFunctions.generateSQL(canvas);
 
         var s = "CREATE TABLE Students("
-        s += "id INT AUTO INCREMENT PRIMARY KEY, "
+        s += "id INT PRIMARY KEY, "
         s += "name VARCHAR(20) NOT NULL, "
         s += "age INT DEFAULT 18, "
         s += "grade DECIMAL(4,2));"
@@ -74,14 +74,14 @@ describe("SQL generation tests", () => {
         var sql = await sqlFunctions.generateSQL(canvas);
 
         var s = "CREATE TABLE Students("
-        s += "id INT AUTO INCREMENT PRIMARY KEY, "
+        s += "id INT PRIMARY KEY, "
         s += "name VARCHAR(20) NOT NULL, "
         s += "age INT DEFAULT 18, "
         s += "School_id INT, "
         s += "FOREIGN KEY (School_id) REFERENCES School(id)); "
 
         s += "CREATE TABLE School("
-        s += "id INT AUTO INCREMENT PRIMARY KEY, "
+        s += "id INT PRIMARY KEY, "
         s += "name VARCHAR(20) NOT NULL);"
 
         await expect(sql).toBe(s);
@@ -128,13 +128,13 @@ describe("SQL generation tests", () => {
         var sql = await sqlFunctions.generateSQL(canvas);
 
         var s = "CREATE TABLE Students("
-        s += "id INT AUTO INCREMENT PRIMARY KEY, "
+        s += "id INT PRIMARY KEY, "
         s += "name VARCHAR(20) NOT NULL, "
         s += "age INT DEFAULT 18, "
         s += "School_id INT); "
 
         s += "CREATE TABLE Course("
-        s += "id INT AUTO INCREMENT PRIMARY KEY, "
+        s += "id INT PRIMARY KEY, "
         s += "name VARCHAR(20) NOT NULL UNIQUE); "
 
         s += "CREATE TABLE Cou_Stu_connector("
@@ -204,18 +204,18 @@ describe("SQL generation tests", () => {
         var sql = await sqlFunctions.generateSQL(canvas);
 
         var s = "CREATE TABLE Students("
-        s += "id INT AUTO INCREMENT PRIMARY KEY, "
+        s += "id INT PRIMARY KEY, "
         s += "name VARCHAR(20) NOT NULL, "
         s += "age INT DEFAULT 18, "
         s += "School_id INT, "
         s += "FOREIGN KEY (School_id) REFERENCES School(id)); "
 
         s += "CREATE TABLE School("
-        s += "id INT AUTO INCREMENT PRIMARY KEY, "
+        s += "id INT PRIMARY KEY, "
         s += "name VARCHAR(20) NOT NULL); "
 
         s += "CREATE TABLE Course("
-        s += "id INT AUTO INCREMENT PRIMARY KEY, "
+        s += "id INT PRIMARY KEY, "
         s += "name VARCHAR(20) NOT NULL UNIQUE); "
 
         s += "CREATE TABLE Cou_Stu_connector("

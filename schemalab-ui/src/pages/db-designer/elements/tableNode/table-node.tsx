@@ -10,7 +10,6 @@ type RowMeta = {
   type: string;
   nn: boolean;
   pk: boolean;
-  ai: boolean;
   unique: boolean;
   default?: string;
 };
@@ -69,13 +68,12 @@ export const TableNode = ({
 
   const isSelected = selectedNodes?.some(n => n.id === id);
 
-  const defaultMeta = (): RowMeta => ({
-    type: "INT",
-    nn: false,
-    pk: false,
-    ai: false,
-    unique: false,
-    default: "",
+  const defaultMeta = (allTrue = false): RowMeta => ({
+    type: "INT", // Default type
+    nn: allTrue, // Not null
+    pk: allTrue, // Primary key
+    unique: allTrue, // Unique
+    default: "", // Default value
   });
 
   // Sync rowMeta length with tableData length
@@ -189,7 +187,7 @@ export const TableNode = ({
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as Node;
 
-      // Close the popover if the click is outside both the popover and the table node (not correctly functional yet)
+      // Close the popover if the click is outside both the popover and the table node.
       if (
         openPopoverRow !== null &&
         popoverRef.current &&
@@ -244,17 +242,22 @@ export const TableNode = ({
 // If pk is selected, make it exclusive
   const updateRowMeta = (rowIndex: number, patch: Partial<RowMeta>) => {
     setRowMeta((prev) => {
-      const next = prev.map((m, i) => {
+      const normalized = [...prev];
+      while (normalized.length < tableData.length) {
+        normalized.push(defaultMeta());
+      }
+
+      const next = normalized.map((meta, i) => {
         if (i === rowIndex) {
-          if (patch.pk) {
-            return { ...m, ...patch, pk: true };
+          if (patch.pk === true) {
+            return { ...meta, ...patch, pk: true };
           }
-          return { ...m, ...patch };
+          return { ...meta, ...patch };
         }
-        if (patch.pk) {
-          return { ...m, pk: false };
+        if (patch.pk === true) {
+          return { ...meta, pk: false };
         }
-        return m;
+        return meta;
       });
 
       updateNodeData(id, { tableData, rowMeta: next, dataModeRows });
@@ -522,14 +525,6 @@ export const TableNode = ({
                             onChange={(e) => updateRowMeta(rowIndex, { pk: e.target.checked })}
                           />{" "}
                           PK
-                        </label>
-                        <label>
-                          <input
-                            type="checkbox"
-                            checked={rowMeta[rowIndex]?.ai}
-                            onChange={(e) => updateRowMeta(rowIndex, { ai: e.target.checked })}
-                          />{" "}
-                          AI
                         </label>
                         <label>
                           <input
