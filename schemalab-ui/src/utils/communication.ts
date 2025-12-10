@@ -78,9 +78,11 @@ export const DELETE = <T>(service: Services, url?: string, message?: string, dat
 
 axios.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem("authToken");
+        const user = localStorage.getItem("user");
+        const token = user ? JSON.parse(user).token : null;
+
         if (token) {
-            config.headers.Authorization = token;
+            config.headers.Authorization = `Bearer ${token}`;
         }
         return config;
     },
@@ -92,7 +94,7 @@ axios.interceptors.response.use(
     (error) => {
         if (error.response?.status === 401) {
             // JWT has expired or is just invalid
-            localStorage.removeItem("authToken");
+            localStorage.removeItem("user");
 
             // WIP: redirect user to login screen
         }
