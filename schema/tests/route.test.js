@@ -45,10 +45,10 @@ describe("Schema Route tests", () => {
                             position: {x:100,y:100},
                             data: ["id", "name", "age", "School_id"],
                             attributes: [
-                                {ai: true, default: "", nn: false, pk: true, type: "INT", unique: false},
-                                {ai: false, default: "", nn: true, pk: false, type: "VARCHAR(20)", unique: false},
-                                {ai: false, default: "18", nn: false, pk: false, type: "INT", unique: false},
-                                {ai: false, default: "", nn: false, pk: false, type: "INT", unique: false}
+                                {default: "", nn: false, pk: true, type: "INT", unique: false},
+                                {default: "", nn: true, pk: false, type: "VARCHAR(20)", unique: false},
+                                {default: "18", nn: false, pk: false, type: "INT", unique: false},
+                                {default: "", nn: false, pk: false, type: "INT", unique: false}
                             ]
                         },
                         {
@@ -57,8 +57,8 @@ describe("Schema Route tests", () => {
                             position: {x:100,y:100},
                             data: ["id", "name"],
                             attributes: [
-                                {ai: true, default: "", nn: false, pk: true, type: "INT", unique: false},
-                                {ai: false, default: "", nn: true, pk: false, type: "VARCHAR(20)", unique: false}
+                                {default: "", nn: false, pk: true, type: "INT", unique: false},
+                                {default: "", nn: true, pk: false, type: "VARCHAR(20)", unique: false}
                             ]
                         },
                         {
@@ -67,8 +67,8 @@ describe("Schema Route tests", () => {
                             position: {x:100,y:100},
                             data: ["id", "name"],
                             attributes: [
-                                {ai: true, default: "", nn: false, pk: true, type: "INT", unique: false},
-                                {ai: false, default: "", nn: true, pk: false, type: "VARCHAR(20)", unique: true}
+                                {default: "", nn: false, pk: true, type: "INT", unique: false},
+                                {default: "", nn: true, pk: false, type: "VARCHAR(20)", unique: true}
                             ]
                         }
                     ]
@@ -76,6 +76,7 @@ describe("Schema Route tests", () => {
             }
         });
         // Status OK
+        console.log(res.body);
         expect(res.status).toBe(200);
         var fileName = res.body.data.fileName;
 
