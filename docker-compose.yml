@@ -1,0 +1,92 @@
+name: SchemaLab
+
+services:
+  reverse-proxy:
+    image: traefik:v3.1
+    command:
+      - "--providers.docker=true"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  schemalabui:
+    build: ./schemalab-ui
+    env_file:
+     - ./schemalab-ui/.env
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.schemalabUI.rule=PathPrefix(`/`)"
+      - "traefik.http.services.schemalabUI.loadbalancer.server.port=3000"
+  
+  schema:
+    build: ./schema
+    env_file:
+      - ./schema/.env
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.schema.rule=PathPrefix(`/schema`)"
+      - "traefik.http.services.schema.loadbalancer.server.port=7070"
+
+  auth_db:
+    image: postgres:14-alpine
+    environment:
+      - POSTGRES_USER=myuser
+      - POSTGRES_PASSWORD=mypassword
+      - POSTGRES_DB=auth_db
+    volumes:
+      - auth_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U myuser -d auth_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  auth_mailhog:
+    image: mailhog/mailhog
+
+  auth:
+    build: ./auth
+    # env_file:
+    #   - ./auth/.env
+    command: >
+      sh -c "sleep 5 && 
+             python manage.py migrate --no-input && 
+             python manage.py runserver 0.0.0.0:5050"
+    depends_on:
+      auth_db:
+        condition: service_healthy
+      auth_mailhog:
+        condition: service_started
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.auth.rule=PathPrefix(`/auth`)"
+      - "traefik.http.services.auth.loadbalancer.server.port=5050"
+
+  management:
+    build: ./management
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.management.rule=PathPrefix(`/management`)"
+      - "traefik.http.services.management.loadbalancer.server.port=5050"
+    command: bash -c "./management/entrypoint.sh python manage.py runserver 0.0.0.0:6060"
+    volumes:
+      - .:/app
+      - ./media:/app/media
+
+  management_db:
+    image: postgres:16
+    env_file:
+      - ./management/.env
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  auth_db_data:
+  pgdata:
+
