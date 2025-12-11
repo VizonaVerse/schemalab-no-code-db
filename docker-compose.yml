@@ -5,13 +5,15 @@ services:
     image: traefik:3.1.2
     command:
       - "--providers.docker=true"
+      - "--providers.docker.endpoint=unix:///var/run/docker.sock"
+      - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
       - "--api.insecure=true"
     ports:
       - "80:80"
       - "8080:8080" #Expose for the traefik dashboard - blocked by uni firewall :( 
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - app-network
 
