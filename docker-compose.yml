@@ -20,7 +20,7 @@ services:
      - ./schemalab-ui/.env
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.schemalabUI.rule=Host(`group14.com3033.csee-systems.com`)"
+      - "traefik.http.routers.schemalabUI.rule=PathPrefix(`/`)"
       - "traefik.http.services.schemalabUI.loadbalancer.server.port=8080"
     networks:
       - app-network
