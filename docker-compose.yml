@@ -3,6 +3,7 @@ name: SchemaLab
 services:
   reverse-proxy:
     image: traefik:3.1.2
+    user: "0:0"
     command:
       - "--providers.docker=true"
       - "--providers.docker.endpoint=unix:///var/run/docker.sock"
