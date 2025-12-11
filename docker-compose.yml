@@ -2,14 +2,14 @@ name: SchemaLab
 
 services:
   reverse-proxy:
-    image: traefik:v3.1
+    image: traefik:v2.2
     command:
       - "--providers.docker=true"
       - "--entrypoints.web.address=:80"
       - "--api.insecure=true"
     ports:
       - "80:80"
-      - "8080:8080"
+      - "8080:8080" #Expose for the traefik dashboard - blocked by uni firewall :( 
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
