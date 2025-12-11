@@ -25,7 +25,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.schemalabUI.rule=PathPrefix(`/`)"
-      - "traefik.http.services.schemalabUI.loadbalancer.server.port=8080"
+      - "traefik.http.services.schemalabUI.loadbalancer.server.port=80"
     networks:
       - app-network
   
