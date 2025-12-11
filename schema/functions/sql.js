@@ -27,6 +27,7 @@ async function generateSQL(canvas) {
             var name = tables[i].name;
             var data = tables[i].data;
             var attributes = tables[i].attributes;
+            var dataRows = tables[i].dataModelRows;
         }
     } catch {
         throw {code: "S00", httpCode: 400, message: "Invalid JSON format"};
@@ -74,13 +75,15 @@ async function generateSQL(canvas) {
                 rowType1: "",
                 tableName2:"",
                 rowName2: "",
-                rowType2: ""
+                rowType2: "",
+                data: []
             }
             for (var i = 0; i < tables.length; i++) {
                 if (tables[i].id == source) {
                     inter.tableName1 = tables[i].name;
                     inter.rowName1 = tables[i].data[sourceRow];
                     inter.rowType1 = tables[i].attributes[sourceRow].type;
+                    
                 }
             }
             for (var i = 0; i < tables.length; i++) {

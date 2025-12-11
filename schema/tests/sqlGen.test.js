@@ -226,7 +226,7 @@ describe("SQL generation tests", () => {
         await expect(sql).toBe(s);
     });
 
-    test("Test more than one AutoIncr and PrimaryKey", async () => {
+    test("Test more than one PrimaryKey", async () => {
         var canvas = {
             relationships: [],
             tables: [{
@@ -235,10 +235,10 @@ describe("SQL generation tests", () => {
                 position: {x:100,y:100},
                 data: ["id", "name", "age", "grade"],
                 attributes: [
-                    {ai: true, default: "", nn: false, pk: true, type: "INT", unique: false},
-                    {ai: true, default: "", nn: true, pk: false, type: "VARCHAR(20)", unique: false},
-                    {ai: false, default: "18", nn: false, pk: false, type: "INT", unique: false},
-                    {ai: false, default: "", nn: false, pk: false, type: "DECIMAL(4,2)", unique: false}
+                    {default: "", nn: false, pk: true, type: "INT", unique: false},
+                    {default: "", nn: true, pk: false, type: "VARCHAR(20)", unique: false},
+                    {default: "18", nn: false, pk: false, type: "INT", unique: false},
+                    {default: "", nn: false, pk: false, type: "DECIMAL(4,2)", unique: false}
                 ]
             }]
         }
