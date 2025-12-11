@@ -2,7 +2,7 @@ name: SchemaLab
 
 services:
   reverse-proxy:
-    image: traefik:v3.1
+    image: traefik:3.1.2
     command:
       - "--providers.docker=true"
       - "--entrypoints.web.address=:80"
