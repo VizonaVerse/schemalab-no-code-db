@@ -43,12 +43,17 @@ describe("Schema Route tests", () => {
                             id: "1",
                             name: "Students",
                             position: {x:100,y:100},
-                            data: ["id", "name", "age", "School_id"],
+                            data: ["id", "name", "age", "School_id", "passed"],
                             attributes: [
-                                {default: "", nn: false, pk: true, type: "INT", unique: false},
-                                {default: "", nn: true, pk: false, type: "VARCHAR(20)", unique: false},
-                                {default: "18", nn: false, pk: false, type: "INT", unique: false},
-                                {default: "", nn: false, pk: false, type: "INT", unique: false}
+                                {ai: true, default: "", nn: false, pk: true, type: "INT", unique: false},
+                                {ai: false, default: "", nn: true, pk: false, type: "VARCHAR(20)", unique: false},
+                                {ai: false, default: "18", nn: false, pk: false, type: "INT", unique: false},
+                                {ai: false, default: "", nn: false, pk: false, type: "INT", unique: false},
+                                {ai: false, default: "", nn: false, pk: false, type: "INT", unique: false}
+                            ],
+                            dataModelRows: [
+                                ["1", "bob", "18", "1", "1"],
+                                ["2", "sam", "19", "1", "0"]
                             ]
                         },
                         {
@@ -57,8 +62,11 @@ describe("Schema Route tests", () => {
                             position: {x:100,y:100},
                             data: ["id", "name"],
                             attributes: [
-                                {default: "", nn: false, pk: true, type: "INT", unique: false},
-                                {default: "", nn: true, pk: false, type: "VARCHAR(20)", unique: false}
+                                {ai: true, default: "", nn: false, pk: true, type: "INT", unique: false},
+                                {ai: false, default: "", nn: true, pk: false, type: "VARCHAR(20)", unique: false}
+                            ],
+                            dataModelRows: [
+                                ["1", "school"]
                             ]
                         },
                         {
@@ -67,8 +75,11 @@ describe("Schema Route tests", () => {
                             position: {x:100,y:100},
                             data: ["id", "name"],
                             attributes: [
-                                {default: "", nn: false, pk: true, type: "INT", unique: false},
-                                {default: "", nn: true, pk: false, type: "VARCHAR(20)", unique: true}
+                                {ai: true, default: "", nn: false, pk: true, type: "INT", unique: false},
+                                {ai: false, default: "", nn: true, pk: false, type: "VARCHAR(20)", unique: true}
+                            ],
+                            dataModelRows: [
+                                ["1", "course"]
                             ]
                         }
                     ]
