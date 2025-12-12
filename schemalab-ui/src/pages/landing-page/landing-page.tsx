@@ -1,5 +1,4 @@
-// import { LineBackground } from "./background";
-import background from "../../assets/landing-page-background.png";
+// import background from "../../assets/landing-page-background.png";
 import logo from "../../assets/schemalab-logo-no-text.svg";
 import { Button, Card, Avatar, Popover } from 'antd';
 import "./landing-page.scss";
@@ -9,7 +8,7 @@ import react from "../../assets/landing-page-cards/react.svg";
 import django from "../../assets/landing-page-cards/django.svg";
 import express from "../../assets/landing-page-cards/express.svg";
 import postgresql from "../../assets/landing-page-cards/postgresql.svg";
-import traefik from "../../assets/landing-page-cards/traefik.svg";
+import nginx from "../../assets/landing-page-cards/nginx.svg";
 import javascript from "../../assets/landing-page-cards/javascript.svg";
 import docker from "../../assets/landing-page-cards/docker.svg";
 import { useNavigate } from "react-router-dom";
@@ -72,12 +71,12 @@ export function LandingPage() {
             </div>
 
             <div className="hero">
-                <div className="background"><img src={background} className="background-img" /></div>
+                {/* <div className="background"><img src={background} className="background-img" /></div> */}
                 <div className="content">
                     <h1 className="title">SchemaLab</h1>
                     <p className="description">No code database creation tool for developers</p>
-                    <Button className="startBtn">Get Started</Button>
-                    <Button type="link" className="gitlabBtn">< GitlabOutlined /> View project</Button>
+                    <Button className="startBtn" onClick={() => navigate('/register')}>Get Started</Button>
+                    <Button type="link" className="gitlabBtn" onClick={() => window.location.href = 'https://gitlab.surrey.ac.uk/schemalab/no-code-db'}>< GitlabOutlined /> View project</Button>
                 </div>
                 {/* <div className="members">
                     <Avatar.Group size="large">
@@ -156,7 +155,7 @@ export function LandingPage() {
 
                 <Card className="card">
                     <div className="img-section">
-                        <img className="img" src={traefik} />
+                        <img className="img" src={nginx} />
                     </div>
                     <h2>Routing</h2>
                     <p>Communication between services and port exposure was handled by traefik.</p>

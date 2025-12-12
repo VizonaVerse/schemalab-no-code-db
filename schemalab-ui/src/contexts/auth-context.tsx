@@ -1,4 +1,4 @@
-import { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import { createContext, useState, useContext, useEffect, Dispatch, SetStateAction } from 'react';
 import { useNavigate } from "react-router";
 import { Spin, Result } from 'antd';
 import { FullError } from "../utils/full-error";
@@ -14,6 +14,11 @@ export type LoginType = {
 export type RegisterType = {
     email: string;
     password: string;
+    first_name: string;
+    last_name: string;
+}
+
+export type UpdateName = {
     first_name: string;
     last_name: string;
 }
@@ -44,6 +49,9 @@ interface ProviderProps {
     loading: boolean;
     fetchProjects: () => Promise<void>;
     deleteProject: (id: number) => Promise<void>;
+    settings: boolean;
+    setSettings: Dispatch<SetStateAction<boolean>>,
+    updateName(data: UpdateName): void,
 }
 
 interface Project {
@@ -79,6 +87,9 @@ const AuthContext = createContext<ProviderProps>({
     loading: false,
     fetchProjects: async () => Promise.resolve(),
     deleteProject: async () => Promise.resolve(),
+    settings: false,
+    setSettings: () => { },
+    updateName: () => { },
 })
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -89,6 +100,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [loading, setLoading] = useState<boolean>(true);
     const [percent, setPercent] = useState<number>(0);
     const navigate = useNavigate();
+    const [settings, setSettings] = useState<boolean>(false);
 
     const incrementPercent = () => {
         if (percent >= 100) {
@@ -169,7 +181,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 Services.AUTH,
                 "/register",
                 "Register Request",
-                { data }
+                data
             );
             incrementPercent();            
 
@@ -221,7 +233,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 Services.AUTH,
                 "/password/change",
                 "Change Password Request",
-                { data }
+                data
             );
             incrementPercent();
             incrementPercent();
@@ -249,7 +261,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 Services.AUTH,
                 "/password-reset/",
                 "Reset Password Request",
-                { data }
+                data
             );
             incrementPercent();
             incrementPercent();
@@ -282,7 +294,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 Services.AUTH,
                 "/password-reset/confirm",
                 "Reset Password Request",
-                { data }
+                data
             );
             incrementPercent();
             incrementPercent();
@@ -341,9 +353,34 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         fetchProjects();
     }, []);
 
+    const updateName = async (data: UpdateName) => {
+        setLoading(true);
+        incrementPercent();
+        // send the request to auth service
+        try {
+            const response = await POST<registerResult>(
+                Services.AUTH,
+                "/updateName",
+                "Update name Request",
+                data
+            );
+            incrementPercent();            
+
+            incrementPercent();
+            incrementPercent();
+            endPercent();
+            setLoading(false);
+        } catch (error) {
+            endPercent();
+            setLoading(false);
+            displayError();
+        }
+    }
+
+    // const fetchName = async 
 
     return (
-        <AuthContext.Provider value={{ user, token, login, register, logout, projects, loading, fetchProjects, deleteProject, resetPasswordAuthenticated, requestPasswordReset, resetPasswordConfirmation }}>
+        <AuthContext.Provider value={{ user, token, login, register, logout, projects, loading, fetchProjects, deleteProject, resetPasswordAuthenticated, requestPasswordReset, resetPasswordConfirmation, settings, setSettings, updateName }}>
             <Spin spinning={loading} percent={percent} fullscreen />
             {children}
         </AuthContext.Provider>
