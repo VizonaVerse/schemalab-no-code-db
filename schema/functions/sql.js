@@ -1,5 +1,31 @@
 const valFunctions = require('../functions/validation');
 
+const numberTypes = [
+    "INT",
+    "INTEGER",
+    "TINYINT",
+    "SMALLINT",
+    "MEDIUMINT",
+    "BIGINT",
+    "INT2",
+    "INT8",
+    "DECIMAL",
+    "REAL",
+    "DOUBLE",
+    "FLOAT",
+    "NUMERIC",
+    "BOOLEAN"
+];
+
+async function isNumber(type) {
+    for (var Ntype of numberTypes) {
+        if (type.includes(Ntype)){
+            return true;
+        }
+    }
+    return false;
+}
+
 async function generateSQL(canvas) {
     try {
         var relationships = canvas.relationships;
@@ -20,6 +46,7 @@ async function generateSQL(canvas) {
             //     row: 0 or "field name",
             //     rowREF: null or "field name"
             //     tableREF: null or "table name"
+            //     depTableID: null or id
             // }
             
             // does table have everything else it needs?
@@ -52,19 +79,21 @@ async function generateSQL(canvas) {
                         key: "p",
                         row: sourceRow,
                         rowREF: null,
-                        tableREF: null
+                        tableREF: null,
+                        depTableID: null
                     });
 
                     for (var j = 0; j < tables.length; j++) {
-                    if (tables[j].id == target) {
-                        tables[j].relations.push({
-                            key: "f",
-                            row: tables[j].data[targetRow],
-                            rowREF: tables[i].data[sourceRow],
-                            tableREF: tables[i].name
-                        });
+                        if (tables[j].id == target) {
+                            tables[j].relations.push({
+                                key: "f",
+                                row: tables[j].data[targetRow],
+                                rowREF: tables[i].data[sourceRow],
+                                tableREF: tables[i].name,
+                                depTableID: i // This is the id of the table that must have its data inserted first before this table goes
+                            });
+                        }
                     }
-                }
                 }
             }
         } else if (type == "manyToManyEdge") {
@@ -123,11 +152,16 @@ async function generateSQL(canvas) {
                 }
                 if (!done) constraints.push("PRIMARY KEY");
             }
+
+            // init data
+            var values = [];
+            for (var row of table.dataModelRows) values.push(row[i]);
             
             fieldList.push({
                 name: table.data[i],
                 type: table.attributes[i].type,
-                constraints: constraints
+                constraints: constraints,
+                values: values
             });
         }
 
@@ -158,6 +192,61 @@ async function generateSQL(canvas) {
         sqlString += tableString + " ";
     }
 
+    // add initial data
+    var idsLeft = [];
+    for (var i = 0; i < tables.length; i++) {
+        // does table have init data?
+        if (tables[i].dataModelRows.length != 0) {
+            idsLeft.push(i);
+        }
+    }
+    var index = 0;
+    var prevLength = idsLeft.length;
+    while (idsLeft.length > 0) {
+        var id = idsLeft[index];
+        // does table have a dependancy?
+        var canInsert = true;
+        for (var rel of tables[id].relations) {
+            if (rel.key == "f") {
+                if (idsLeft.includes(rel.depTableID)) {
+                    canInsert = false;
+                }
+            }
+        }
+        // insert data
+        if (canInsert) {
+            var dataString = `INSERT INTO ${tables[id].name}(`;
+            for (var name of tables[id].data) {
+                dataString += `${name}, `;
+            }
+            dataString = dataString.substring(0, dataString.length - 2) + ") VALUES (";
+            for (var row of tables[id].dataModelRows) {
+                for (var i = 0; i < row.length; i++) {
+                    if (await isNumber(tables[id].attributes[i].type.toUpperCase())) {
+                        dataString += `${row[i]}, `
+                    } else {
+                        dataString += `'${row[i]}', `
+                    }
+                }
+                dataString = dataString.substring(0, dataString.length - 2) + "), (";
+            }
+            sqlString += dataString.substring(0, dataString.length - 3) + "; ";
+
+            // remove id from array
+            idsLeft.splice(idsLeft.indexOf(id), 1);
+        } else {
+            // if data can't be inserted move onto next table
+            index++;
+        }
+        if (index >= idsLeft.length) {
+            index = 0;
+            if (prevLength == idsLeft.length) {
+                throw {code: "V12", httpCode: 400, message: "Relationship dependancy error (you may have invalid or circular relationships)"};
+            }
+            prevLength = idsLeft.length;
+        }
+    }
+
     // add inter tables
     for (var inter of interTables) {
         // check if the first 3 digits of each name is unique
@@ -179,7 +268,6 @@ async function generateSQL(canvas) {
     }
     sqlString = sqlString.substring(0, sqlString.length - 1);
 
-    //return "CREATE TABLE test(id int, name varchar(225));"; // placeholder sql
     return sqlString; // actual return
 }
 
