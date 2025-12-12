@@ -54,7 +54,6 @@ class ProfileView(APIView):
         
         data = {
             'id': user.id,
-            'username': user.username,
             'email': user.email
         }
 
@@ -243,7 +242,6 @@ class ProfileView(APIView):
         user = request.user
         data = {
             'id': user.id,
-            'username': user.username,
             'email': user.email,
             'first_name': user.first_name, 
             'last_name': user.last_name,
