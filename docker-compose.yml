@@ -25,12 +25,12 @@ services:
     networks:
       - app-network
   
-  # schema:
-  #   build: ./schema
-  #   env_file:
-  #     - ./schema/.env
-  #   networks:
-  #     - app-network
+  schema:
+    build: ./schema
+    env_file:
+      - ./schema/.env
+    networks:
+      - app-network
 
   # auth_db:
   #   image: postgres:14-alpine
