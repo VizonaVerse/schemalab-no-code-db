@@ -3,7 +3,8 @@ from django.shortcuts import render
 from django.contrib.auth.models import User
 from rest_framework import generics
 from rest_framework.permissions import AllowAny
-from .serializers import RegisterSerializer, MyTokenObtainPairSerializer
+from .serializers import RegisterSerializer
+from .serializers import MyTokenObtainPairSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -32,9 +33,9 @@ class RegisterView(generics.CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         try:
-            payload = request.data['data']['data']
-        except KeyError:
             payload = request.data['data']
+        except KeyError:
+            payload = request.data
         
         serializer = self.get_serializer(data=payload)
         serializer.is_valid(raise_exception=True)
