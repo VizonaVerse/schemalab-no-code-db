@@ -25,10 +25,11 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user = User.objects.create_user(
+            username=validated_data['email'], 
             email=validated_data['email'],
             password=validated_data['password'],
             first_name=validated_data['first_name'],
-            last_name=validated_data['last_name']
+            last_name=validated_data['last_name'],
         )
         return user
 
@@ -41,6 +42,8 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         self.fields.pop('username', None)
 
     def validate(self, attrs):
+        attrs['username'] = attrs.get('email') 
+
         data = super().validate(attrs)
 
         first_name = getattr(self.user, 'first_name', '')
