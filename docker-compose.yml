@@ -1,0 +1,95 @@
+name: SchemaLab
+
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: schemalab-nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - schemalabui
+      # - schema
+      # - auth
+      # - management
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - app-network
+
+  schemalabui:
+    build:
+      context: ./schemalab-ui
+      dockerfile: Dockerfile
+    env_file:
+     - ./schemalab-ui/.env
+    networks:
+      - app-network
+  
+  schema:
+    build: ./schema
+    env_file:
+      - ./schema/.env
+    networks:
+      - app-network
+
+  # auth_db:
+  #   image: postgres:14-alpine
+  #   environment:
+  #     - POSTGRES_USER=myuser
+  #     - POSTGRES_PASSWORD=mypassword
+  #     - POSTGRES_DB=auth_db
+  #   volumes:
+  #     - auth_db_data:/var/lib/postgresql/data
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U myuser -d auth_db"]
+  #     interval: 5s
+  #     timeout: 5s
+  #     retries: 5
+  #   networks:
+  #     - app-network
+
+  # auth_mailhog:
+  #   image: mailhog/mailhog
+
+  # auth:
+  #   build: ./auth
+  #   # env_file:
+  #   #   - ./auth/.env
+  #   command: >
+  #     sh -c "sleep 5 && 
+  #            python manage.py migrate --no-input && 
+  #            python manage.py runserver 0.0.0.0:5050"
+  #   depends_on:
+  #     auth_db:
+  #       condition: service_healthy
+  #     auth_mailhog:
+  #       condition: service_started
+  #   networks:
+  #     - app-network
+
+  # management:
+  #   build: ./management
+  #   command: bash -c "./management/entrypoint.sh python manage.py runserver 0.0.0.0:6060"
+  #   volumes:
+  #     - .:/app
+  #     - ./media:/app/media
+  #   networks:
+  #     - app-network
+
+  # management_db:
+  #   image: postgres:16
+  #   env_file:
+  #     - ./management/.env
+  #   volumes:
+  #     - pgdata:/var/lib/postgresql/data
+  #   networks:
+  #     - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  auth_db_data:
+  pgdata:
+
