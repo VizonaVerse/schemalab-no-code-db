@@ -15,12 +15,16 @@
     "@xyflow/react": "12.9.0",
     "antd": "5.28.0",
     "axios": "^1.13.2",
+    "rc-motion": "^2.9.5",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "react-router-dom": "7.9.4",
     "react-scripts": "5.0.1",
+    "react-tsparticles": "2.12.2",
     "reactflow": "11.11.4",
     "sass": "1.93.2",
+    "tsparticles": "3.9.1",
+    "tsparticles-slim": "^2.12.0",
     "typescript": "4.9.5"
   },
   "scripts": {

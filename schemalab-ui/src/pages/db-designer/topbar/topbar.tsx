@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
-import "./topbar.scss"; // Import CSS for styling
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react"; import "./topbar.scss"; // Import CSS for styling
 import { Node, NodeProps } from "reactflow";
 import Logo from "../../../assets/schemalab-logo-no-text.svg";
 import { DownOutlined, SettingOutlined } from '@ant-design/icons';
-import { Dropdown, Switch, Space, Button, Tooltip, Modal, Input, message } from 'antd';
+import { Dropdown, Switch, Space, Button, Tooltip, Modal, Input, message, Checkbox } from 'antd';
 import { useCanvasContext } from "../../../contexts/canvas-context";
 import tableAdd from "../../../assets/TableAdd.svg";
 import bin from "../../../assets/bin.svg";
@@ -13,7 +12,7 @@ import axios from "axios"; // Import axios for HTTP requests
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { useAuth } from '../../../contexts/auth-context';
 import type { MenuProps } from 'antd';
-import { formatCanvasData, mapProjectToNodesEdges } from "../../../utils/canvas-utils";
+import { formatCanvasData, mapProjectToNodesEdges, formatExportPayload } from "../../../utils/canvas-utils";
 
 export interface TopBarProps {
     projectName?: string;
@@ -36,10 +35,15 @@ export const Topbar = ({ projectName }: TopBarProps) => {
     const { fetchProjects } = useAuth();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [inputName, setInputName] = useState(projectName); // <-- Use context value
-    const [inputDescription, setInputDescription] = useState("");
     const navigate = useNavigate();
+    const schemaBaseUrl = process.env.REACT_APP_SCHEMA_URL ?? "http://localhost:7070/";
     const location = useLocation();
     const { id: projectId } = useParams(); // <-- Get id from URL params
+
+    // Export modal state: allow selecting both
+    const [exportModalOpen, setExportModalOpen] = useState(false);
+    const [exportSelection, setExportSelection] = useState<{ sql: boolean; db: boolean }>({ sql: true, db: false });
+    const [isExporting, setIsExporting] = useState(false);
 
     const [messageApi, contextHolder] = message.useMessage();
     const autoSaveMessageKey = "auto-save";
@@ -67,11 +71,12 @@ export const Topbar = ({ projectName }: TopBarProps) => {
 
             try {
                 const formattedData = formatCanvasData(latestNodes, latestEdges, nameToSave);
-                await axios.put(`http://localhost:6060/api/projects/${projectId}/`, {
-                    name: nameToSave,
-                    description: inputDescription,
-                    data: formattedData,
-                });
+                await axios.put(
+                    `http://localhost:6060/api/projects/${projectId}/`,
+                    {
+                        name: nameToSave,
+                        data: formattedData,
+                    });
                 messageApi.open({
                     key: autoSaveMessageKey,
                     type: "success",
@@ -89,7 +94,7 @@ export const Topbar = ({ projectName }: TopBarProps) => {
         }, 120000); // Auto-save every 2 minutes.
 
         return () => clearInterval(interval);
-    }, [projectId, inputDescription, messageApi]);
+    }, [projectId, messageApi]);
 
     useEffect(() => {
         setInputName(projectName); // Always sync inputName with context
@@ -115,19 +120,21 @@ export const Topbar = ({ projectName }: TopBarProps) => {
             const formattedData = formatCanvasData(nodes, edges, nameToSave);
 
             if (projectId) {
-                await axios.put(`http://localhost:6060/api/projects/${projectId}/`, {
-                    name: nameToSave,
-                    description: inputDescription,
-                    data: formattedData,
-                });
+                await axios.put(
+                    `http://localhost:6060/api/projects/${projectId}/`,
+                    {
+                        name: nameToSave,
+                        data: formattedData,
+                    });
                 await fetchProjects();
                 messageApi.success("Project updated successfully!");
             } else {
-                const { data: createdProject } = await axios.post("http://localhost:6060/api/projects/", {
-                    name: nameToSave,
-                    description: inputDescription,
-                    data: formattedData,
-                });
+                const { data: createdProject } = await axios.post(
+                    "http://localhost:6060/api/projects/",
+                    {
+                        name: nameToSave,
+                        data: formattedData,
+                    });
 
                 const mapped = mapProjectToNodesEdges({ data: formattedData.data, name: nameToSave });
                 setNodes(mapped.nodes);
@@ -148,7 +155,6 @@ export const Topbar = ({ projectName }: TopBarProps) => {
         } catch (error: any) {
             const backendMsg =
                 error?.response?.data?.name?.[0] ||
-                error?.response?.data?.description?.[0] ||
                 error?.response?.data?.detail ||
                 "Failed to save canvas data.";
             messageApi.error(backendMsg);
@@ -160,6 +166,88 @@ export const Topbar = ({ projectName }: TopBarProps) => {
         setIsModalOpen(false);
     };
 
+    // New export handler for multiple selections
+    const handleExportConfirm = useCallback(async () => {
+        // ensure canvas data is current
+        handleCanvasData();
+
+        if (!exportSelection.sql && !exportSelection.db) {
+            messageApi.warning("Select at least one export option (SQL and/or DB).");
+            return;
+        }
+
+        if (isExporting) return;
+
+        setIsExporting(true);
+
+        try {
+            const payload = formatExportPayload(nodes, edges, projectName ?? "Untitled Project");
+            console.log("Export Payload:", payload);
+
+            // POST to path: /build
+            const postUrl = `${schemaBaseUrl}/build`;
+            const { data } = await axios.post(postUrl, payload);
+            const fileName = data?.data?.fileName;
+            if (!fileName) {
+                throw new Error("Schema service did not return a file name.");
+            }
+
+            // sequential downloads to avoid popup blocks
+            if (exportSelection.sql) {
+                try {
+                    const fileResponse = await axios.get(`${schemaBaseUrl}/build/SQL`, {
+                        responseType: "blob",
+                        params: { fileName },
+                    });
+                    const blob = new Blob([fileResponse.data], { type: "application/sql" });
+                    const url = window.URL.createObjectURL(blob);
+                    const link = document.createElement("a");
+                    link.href = url;
+                    link.download = `${fileName}.sql`;
+                    link.click();
+                    window.URL.revokeObjectURL(url);
+                } catch (err) {
+                    console.warn("Failed to download SQL:", err);
+                    messageApi.error("Failed to download SQL file.");
+                }
+            }
+
+            if (exportSelection.db) {
+                try {
+                    const fileResponse = await axios.get(`${schemaBaseUrl}/build/DB`, {
+                        responseType: "blob",
+                        params: { fileName },
+                    });
+                    const blob = new Blob([fileResponse.data], { type: "application/octet-stream" });
+                    const url = window.URL.createObjectURL(blob);
+                    const link = document.createElement("a");
+                    link.href = url;
+                    link.download = `${fileName}.db`;
+                    link.click();
+                    window.URL.revokeObjectURL(url);
+                } catch (err) {
+                    console.warn("Failed to download DB:", err);
+                    messageApi.error("Failed to download DB file.");
+                }
+            }
+
+            // success message(s)
+            if (exportSelection.sql && exportSelection.db) {
+                messageApi.success("SQL and DB downloaded.");
+            } else if (exportSelection.sql) {
+                messageApi.success("SQL downloaded.");
+            } else if (exportSelection.db) {
+                messageApi.success("DB downloaded.");
+            }
+        } catch (err: any) {
+            const backendMsg = err?.response?.data?.message ?? err.message ?? "Export failed.";
+            messageApi.error(backendMsg);
+        } finally {
+            setIsExporting(false);
+            setExportModalOpen(false);
+        }
+    }, [edges, handleCanvasData, isExporting, messageApi, nodes, projectName, schemaBaseUrl, exportSelection]);
+
     const handleRenameClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
         e.preventDefault();
         if (projectId) {
@@ -170,7 +258,13 @@ export const Topbar = ({ projectName }: TopBarProps) => {
     const items: MenuProps['items'] = useMemo(() => ([
         {
             key: 1,
-            label: (<a>New</a>)
+            label: (
+                <a
+                    onClick={(e) => {
+                        e.preventDefault();
+                        navigate('/dev/db-designer'); // Navigate to the new project page
+                    }}>New</a>
+            ),
         },
         {
             key: 2,
@@ -182,10 +276,7 @@ export const Topbar = ({ projectName }: TopBarProps) => {
         } : null,
         {
             key: 4,
-            label: (<a onClick={(e) => {
-                e.preventDefault();
-                handleCanvasData();
-            }}>Export</a>)
+            label: (<a onClick={(e) => { e.preventDefault(); setExportModalOpen(true); }}>Export</a>)
         },
         {
             key: 5,
@@ -195,13 +286,10 @@ export const Topbar = ({ projectName }: TopBarProps) => {
                         e.preventDefault();
                         await fetchProjects();
                         navigate("/projects");
-                    }}
-                >
-                    Close
-                </a>
+                    }}>Close</a>
             ),
         },
-    ].filter(Boolean) as MenuProps['items']), [projectId, handleSaveClick]);
+    ].filter(Boolean) as MenuProps['items']), [projectId, handleSaveClick, fetchProjects, navigate]);
 
     const addTable = () => {
         const offset = 50;
@@ -245,11 +333,11 @@ export const Topbar = ({ projectName }: TopBarProps) => {
             </div>
             <div className="topbar-middle">
                 <Space direction="vertical">
-                    <Switch 
-                        checkedChildren="Data" 
-                        unCheckedChildren="Build" 
+                    <Switch
+                        checkedChildren="Data"
+                        unCheckedChildren="Build"
                         checked={mode === "data"}
-                        onChange={(checked) => setMode(checked ? "data" : "build")} 
+                        onChange={(checked) => setMode(checked ? "data" : "build")}
                         className="switch"
                     />
                 </Space>
@@ -276,7 +364,7 @@ export const Topbar = ({ projectName }: TopBarProps) => {
                             <img className="tool-icon" src={paste} />
                         </Button>
                     </Tooltip>
-                    
+
                 </div>
             </div>
             <Modal
@@ -292,13 +380,35 @@ export const Topbar = ({ projectName }: TopBarProps) => {
                     value={inputName}
                     onChange={e => setInputName(e.target.value)} // <-- Only update local state
                 />
-                {/* <Input
-                    placeholder="Description (alphanumeric, max 200 chars)"
-                    maxLength={200}
-                    value={inputDescription}
-                    onChange={e => setInputDescription(e.target.value)}
-                /> */}
+            </Modal>
+
+            <Modal
+                title="Export Project"
+                open={exportModalOpen}
+                onOk={handleExportConfirm}
+                onCancel={() => setExportModalOpen(false)}
+                okText={isExporting ? "Exporting..." : "Export"}
+                okButtonProps={{ disabled: isExporting, loading: isExporting }}
+            >
+                <div style={{ marginBottom: 12 }}>
+                    <Checkbox
+                        checked={exportSelection.sql}
+                        onChange={(e) => setExportSelection(s => ({ ...s, sql: e.target.checked }))}
+                    >
+                        Export as SQL
+                    </Checkbox>
+                    <Checkbox
+                        style={{ marginLeft: 16 }}
+                        checked={exportSelection.db}
+                        onChange={(e) => setExportSelection(s => ({ ...s, db: e.target.checked }))}
+                    >
+                        Export as DB
+                    </Checkbox>
+                </div>
+                <div style={{ color: "#666", fontSize: 12 }}>
+                    Select one or both export formats. The SQL option creates a .sql file; DB creates a .db file.
+                </div>
             </Modal>
         </div>
     );
-};
+};  

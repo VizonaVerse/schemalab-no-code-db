@@ -57,8 +57,7 @@ async function validateFields(list) {
     const validConstraints = [
         "NOT NULL",
         "UNIQUE",
-        "PRIMARY KEY",
-        "AUTO INCREMENT"
+        "PRIMARY KEY"
     ]
 
     const validParaConstraints = [
@@ -71,6 +70,10 @@ async function validateFields(list) {
     for (var i = 0; i < list.length; i++) {
         var field = list[i]
         var err = {fieldID: i, fieldName: field.name};
+
+        if (typeof field.name !== "string" || field.name.trim() === "") {
+            throw {code: "S00", httpCode: 400, data: err, message: "Field name is required"};
+        }
         // is the name a duplicate?
         for (var j = 0; j < list.length; j++) {
             if (i != j && field.name == list[j].name) throw {code: "V09", httpCode: 400, data: {fieldID: null, fieldName: field.name}, message: "Duplicate field names"};
@@ -125,7 +128,7 @@ async function validateFields(list) {
                 if (hasPK) throw {code: "V07", httpCode: 400, data: err, message: "More than one PRIMARY KEY in a table"};
                 hasPK = true;
             }
-            if (constr == "AUTO INCREMENT") {
+            if (constr == "AUTOINCREMENT") {
                 if (hasAI) throw {code: "V07", httpCode: 400, data: err, message: "More than one AUTOINCREMENT in a table"};
                 hasAI = true;
             }
@@ -135,8 +138,29 @@ async function validateFields(list) {
 }
 
 async function validateTables(tables) {
+    if (!Array.isArray(tables)) {
+        throw {
+            code: "S01",
+            httpCode: 400,
+            data: {fieldID: null, fieldName: null, tableID: null, tableName: null},
+            message: "Tables payload must be an array"
+        };
+    }
+
     // check for duplicate table names
     for (var i = 0; i < tables.length; i++) {
+        var currentTable = tables[i] || {};
+        var currentName = typeof currentTable.name === "string" ? currentTable.name.trim() : "";
+
+        if (currentName === "") {
+            throw {
+                code: "S00",
+                httpCode: 400,
+                data: {fieldID: null, fieldName: null, tableID: currentTable.id ?? null, tableName: currentTable.name ?? null},
+                message: "Table name is required"
+            };
+        }
+
         for (var j = 0; j < tables.length; j++) {
             if (i != j && tables[i].name == tables[j].name) throw {
                 code: "V09",

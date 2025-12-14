@@ -105,7 +105,6 @@ async function generateSQL(canvas) {
             var constraints = [];
             if (table.attributes[i].nn) constraints.push("NOT NULL");
             if (table.attributes[i].unique) constraints.push("UNIQUE");
-            if (table.attributes[i].ai) constraints.push("AUTO INCREMENT");
             if (table.attributes[i].default != "") {
                 constraints.push(`DEFAULT ${table.attributes[i].default}`);
             }
