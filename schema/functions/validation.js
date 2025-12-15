@@ -5,7 +5,8 @@ async function validateFields(list) {
         type: "", // with parameters included
         constraints: [
             "" // with parameters included (separated by a space)
-        ]
+        ],
+        values: []
     }
     const validTypes = [
         "INT",
@@ -29,6 +30,30 @@ async function validateFields(list) {
         "BOOLEAN",
         "DATE",
         "DATETIME"
+    ]
+
+    const validTypesRegex = [ // with regular expressions for each
+        ["INT", /\d+/g],
+        ["INTEGER", /\d+/g],
+        ["TINYINT", /\d+/g],
+        ["SMALLINT", /\d+/g],
+        ["MEDIUMINT", /\d+/g],
+        ["BIGINT", /\d+/g],
+        ["INT2", /\d+/g],
+        ["INT8", /\d+/g],
+        ["DECIMAL", /\d+\.\d+/g], // has 2 parameters (total digits, digits right of the decimal point)
+        ["REAL", /\d+\.\d+/g],
+        ["DOUBLE", /\d+\.\d+/g],
+        ["FLOAT", /\d+\.\d+/g],
+        ["NUMERIC", /(\d+\.\d+)|\d+/g],
+        ["CHARACTER", /\w+/g], // 1 parameter (length)
+        ["VARCHAR", /\w+/g], // 1 parameter (length)
+        ["NCHAR", /\w+/g], // 1 parameter (length)
+        ["NVARCHAR", /\w+/g], // 1 parameter (length)
+        ["TEXT", /\w+/g],
+        ["BOOLEAN", /[01]/g],
+        ["DATE", /\d\d\d\d-\d\d-\d\d/g],
+        ["DATETIME", /\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d/g]
     ]
 
     const validParameters = [
@@ -65,7 +90,6 @@ async function validateFields(list) {
     ]
 
     var hasPK = false;
-    var hasAI = false;
     // validation process
     for (var i = 0; i < list.length; i++) {
         var field = list[i]
@@ -80,6 +104,7 @@ async function validateFields(list) {
         }
 
         var type = field.type.toUpperCase();
+        var params = [];
         // does it contain a parameter?
         if (type.includes("(") && type.includes(")")) {
             var split1 = type.split("(");
@@ -94,10 +119,9 @@ async function validateFields(list) {
             if (paras == 0) throw {code: "V03", httpCode: 400, data: err, message: "Data type has parameters when it shouldn't"};
             if (paras == 1) {
                 if (split1.length == 2) {
-                    var isNotNumber = isNaN(split1[1].replace(")", ""));
-                    if (isNotNumber) {
-                        throw {code: "V04", httpCode: 400, data: err, message: "Invlid parameter or parameter length"};
-                    }
+                    var split2 = split1[1].replace(")", "");
+                    if (isNaN(split2)) throw {code: "V04", httpCode: 400, data: err, message: "Invlid parameter or parameter length"};
+                    params.push(split2);
                 } else {
                     throw {code: "V02", httpCode: 500, data: err, message: "Invlid parameter format"};
                 }
@@ -108,6 +132,8 @@ async function validateFields(list) {
                     if (split2.length != 2) throw {code: "V04", httpCode: 400, data: err, message: "Invlid parameter or parameter length"};
                     if (isNaN(split2[0])) throw {code: "V04", httpCode: 400, data: err, message: "Invlid parameter or parameter length"};
                     if (isNaN(split2[1])) throw {code: "V04", httpCode: 400, data: err, message: "Invlid parameter or parameter length"};
+                    params.push(split2[0]);
+                    params.push(split2[1]);
                 } else {
                     throw {code: "V02", httpCode: 500, data: err, message: "Invlid parameter format"};
                 }
@@ -117,6 +143,8 @@ async function validateFields(list) {
             throw {code: "V05", httpCode: 400, data: err, message: "Invlid data type"};
         }
 
+        var hasUnique = false;
+        var hasNotnull = false;
         for (var constr of field.constraints) {
             constr = constr.toUpperCase();
             if (! validConstraints.includes(constr)) {
@@ -124,13 +152,39 @@ async function validateFields(list) {
                 var split1 = constr.split(" ", 2);
                 if (! validParaConstraints.includes(split1[0])) throw {code: "V06", httpCode: 400, data: err, message: "Invlid constraint"};
             }
+            if (constr == "UNIQUE" || constr == "PRIMARY KEY") hasUnique = true;
+            if (constr == "NOT NULL" || constr == "PRIMARY KEY") hasNotnull = true;
             if (constr == "PRIMARY KEY") {
                 if (hasPK) throw {code: "V07", httpCode: 400, data: err, message: "More than one PRIMARY KEY in a table"};
                 hasPK = true;
             }
-            if (constr == "AUTOINCREMENT") {
-                if (hasAI) throw {code: "V07", httpCode: 400, data: err, message: "More than one AUTOINCREMENT in a table"};
-                hasAI = true;
+        }
+        //console.log(regex);
+        for (var j = 0; j < field.values.length; j++) {
+            var value = field.values[j];
+            // is it unique if it needs to be?
+            if (hasUnique) {
+                for (var k = 0; k < field.values.length; k++) {
+                    if (j != k && value == field.values[k]) throw {code: "V10", httpCode: 400, data: err, message: "Field has duplicate values when there shouldn't be"}
+                }
+            }
+            // is it not null if it needs to be?
+            if (hasNotnull) {
+                if (value == "null" || value == "null") throw {code: "V10", httpCode: 400, data: err, message: "Field has a null value when there shouldn't be"}
+            }
+            // does it have correct typing
+            if (params.length == 1) {
+                if (value.length > params[0]) throw {code: "V11", httpCode: 400, data: err, message: `The value: ${value} exceeds the field restrictions`}
+            }
+            if (params.length == 2) {
+                if (value.length > (params[0] + 1)) throw {code: "V11", httpCode: 400, data: err, message: `The value: ${value} exceeds the field restrictions`}
+            }
+            
+            for (var typeData of validTypesRegex) {
+                if (typeData[0] == type) {
+                    if (! new RegExp(typeData[1]).test(value)) throw {code: "V10", httpCode: 400, data: err, message: `The value: ${value} has an incorrect format`};
+                    break;
+                }
             }
         }
     }
