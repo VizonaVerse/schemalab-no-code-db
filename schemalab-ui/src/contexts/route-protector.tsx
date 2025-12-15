@@ -5,13 +5,15 @@ import { Spin } from 'antd';
 import { GET, Services } from "../utils/communication";
 
 export const RouteProtector = () => {
-    const { user, token, logout } = useAuth();
+    const { user, logout } = useAuth();
     const [validating, setValidating] = useState(true);
     const [valid, setValid] = useState(false);
 
     useEffect(() => {
         const validateToken = async () => {
-            if (!token) {
+            console.log("authenticating token");
+            console.log("user::", user);
+            if (!user?.access) {
                 setValid(false);
                 setValidating(false);
                 return;
@@ -31,7 +33,7 @@ export const RouteProtector = () => {
         }
 
         validateToken();
-    }, [token, logout]);
+    }, [user?.access, logout]);
 
     if (validating) {
         return <Spin fullscreen />;

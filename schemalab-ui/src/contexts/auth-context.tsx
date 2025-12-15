@@ -1,6 +1,6 @@
 import { createContext, useState, useContext, useEffect, Dispatch, SetStateAction } from 'react';
-import { useNavigate } from "react-router";
-import { Spin, Result } from 'antd';
+import { useNavigate } from "react-router-dom";
+import { Spin, message } from 'antd';
 import { FullError } from "../utils/full-error";
 import { FullSuccess } from "../utils/full-success";
 import { GET, POST, DELETE, Services } from "../utils/communication";
@@ -10,6 +10,14 @@ export type LoginType = {
     password: string;
     // remember_me?: boolean | undefined;
 }
+
+export interface loginResult {
+        access: string;
+        admin: boolean;
+        name: string;
+        refresh: string;
+}
+
 
 export type RegisterType = {
     email: string;
@@ -33,12 +41,11 @@ export type PasswordLinkType = {
 }
 
 export type passwordResetConfirm = {
-        new_password: string
-    }
+    new_password: string
+}
 
 interface ProviderProps {
-    user: string | null,
-    token: string,
+    user?: loginResult | null,
     login(data: LoginType): void,
     register(data: RegisterType): void,
     logout(): void,
@@ -76,7 +83,6 @@ interface AuthUser {
 
 const AuthContext = createContext<ProviderProps>({
     user: null,
-    token: '',
     login: () => { },
     register: () => { },
     logout: () => { },
@@ -94,13 +100,13 @@ const AuthContext = createContext<ProviderProps>({
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const storedInfo = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user') || '{}') : null
-    const [user, setUser] = useState<string | null>(storedInfo?.email)
-    const [token, setToken] = useState(storedInfo?.token || '');
+    const [user, setUser] = useState<loginResult | null>(storedInfo)
     const [projects, setProjects] = useState<Project[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [percent, setPercent] = useState<number>(0);
     const navigate = useNavigate();
     const [settings, setSettings] = useState<boolean>(false);
+    const [messageApi, contextHolder] = message.useMessage();
 
     const incrementPercent = () => {
         if (percent >= 100) {
@@ -112,10 +118,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const endPercent = () => {
         setPercent(0);
-    }
-
-    interface loginResult {
-        token: string;
     }
 
     const checkAuth = async () => {
@@ -132,7 +134,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const login = async (data: LoginType) => {
         setLoading(true);
-
         // send the request to auth service
         try {
             const response = await POST<loginResult>(
@@ -141,20 +142,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 "Login Request",
                 data
             );
-            const token = response.data.data.token;
             incrementPercent();
 
             setTimeout(() => {
-                const obj = { ...data, token: token }
-                setUser(data.email);
+                console.log("response.data::", response.data);
+                setUser(response.data.data);
 
                 incrementPercent();
-
-                setToken(token);
-
                 incrementPercent();
 
-                localStorage.setItem('user', JSON.stringify(obj));
+                localStorage.setItem('user', JSON.stringify(response.data));
+                console.log("Here before redirct");
                 navigate('/projects');
 
                 incrementPercent();
@@ -162,9 +160,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 setLoading(false);
             }, 1000);
         } catch (error) {
+            console.log("in error");
             endPercent();
             setLoading(false);
-            displayError();
+            messageApi.open({
+                type: 'error',
+                content: 'Invalid credentials'
+            })
         }
     }
 
@@ -179,11 +181,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         try {
             const response = await POST<registerResult>(
                 Services.AUTH,
-                "/register",
+                "/register/",
                 "Register Request",
                 data
             );
-            incrementPercent();            
+            incrementPercent();
 
             setTimeout(() => {
                 incrementPercent();
@@ -211,7 +213,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             incrementPercent();
             setUser(null);
             incrementPercent();
-            setToken('');
             localStorage.removeItem('user');
             incrementPercent();
             endPercent();
@@ -230,18 +231,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             const auth = await checkAuth();
             if (auth) {
                 const response = await POST(
-                Services.AUTH,
-                "/password/change",
-                "Change Password Request",
-                data
-            );
-            incrementPercent();
-            incrementPercent();
-            navigate('/project');
-            incrementPercent();
-            endPercent();
-            setLoading(false);
-            // success
+                    Services.AUTH,
+                    "/password/change",
+                    "Change Password Request",
+                    data
+                );
+                incrementPercent();
+                incrementPercent();
+                navigate('/project');
+                incrementPercent();
+                endPercent();
+                setLoading(false);
+                // success
             }
         } catch (error) {
             // not successful
@@ -258,23 +259,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             const auth = await checkAuth();
             if (!auth) {
                 const response = await POST(
-                Services.AUTH,
-                "/password-reset/",
-                "Reset Password Request",
-                data
-            );
-            incrementPercent();
-            incrementPercent();
-            displaySuccess({ 
-                title: "Password Reset Link Sent", 
-                subTitle: "Password reset link was sent successfully. Please follow the instructions on the email.",
-                buttonLabel: "Login",
-                buttonURL: "/login"
-            })
-            incrementPercent();
-            endPercent();
-            setLoading(false);
-            // success
+                    Services.AUTH,
+                    "/password-reset/",
+                    "Reset Password Request",
+                    data
+                );
+                incrementPercent();
+                incrementPercent();
+                displaySuccess({
+                    title: "Password Reset Link Sent",
+                    subTitle: "Password reset link was sent successfully. Please follow the instructions on the email.",
+                    buttonLabel: "Login",
+                    buttonURL: "/login"
+                })
+                incrementPercent();
+                endPercent();
+                setLoading(false);
+                // success
             }
         } catch (error) {
             // not successful
@@ -291,23 +292,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             const auth = await checkAuth();
             if (!auth) {
                 const response = await POST(
-                Services.AUTH,
-                "/password-reset/confirm",
-                "Reset Password Request",
-                data
-            );
-            incrementPercent();
-            incrementPercent();
-            displaySuccess({ 
-                title: "Password Reset Successfully", 
-                subTitle: "Password has been reset successfully. Reset could take a few minutes to take effect.",
-                buttonLabel: "Login",
-                buttonURL: "/login"
-            })
-            incrementPercent();
-            endPercent();
-            setLoading(false);
-            // success
+                    Services.AUTH,
+                    "/password-reset/confirm",
+                    "Reset Password Request",
+                    data
+                );
+                incrementPercent();
+                incrementPercent();
+                displaySuccess({
+                    title: "Password Reset Successfully",
+                    subTitle: "Password has been reset successfully. Reset could take a few minutes to take effect.",
+                    buttonLabel: "Login",
+                    buttonURL: "/login"
+                })
+                incrementPercent();
+                endPercent();
+                setLoading(false);
+                // success
             }
         } catch (error) {
             // not successful
@@ -324,11 +325,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         buttonURL: string;
     }
 
-    const displaySuccess = ({ title, subTitle, buttonLabel, buttonURL}: successProps) => {
+    const displaySuccess = ({ title, subTitle, buttonLabel, buttonURL }: successProps) => {
         return <FullSuccess title={title} subTitle={subTitle} buttonLabel={buttonLabel} buttonURL={buttonURL} />
     }
 
     const displayError = () => {
+        console.log("displayError");
         return <FullError />;
     }
 
@@ -364,7 +366,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 "Update name Request",
                 data
             );
-            incrementPercent();            
+            incrementPercent();
 
             incrementPercent();
             incrementPercent();
@@ -380,7 +382,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // const fetchName = async 
 
     return (
-        <AuthContext.Provider value={{ user, token, login, register, logout, projects, loading, fetchProjects, deleteProject, resetPasswordAuthenticated, requestPasswordReset, resetPasswordConfirmation, settings, setSettings, updateName }}>
+        <AuthContext.Provider value={{ user, login, register, logout, projects, loading, fetchProjects, deleteProject, resetPasswordAuthenticated, requestPasswordReset, resetPasswordConfirmation, settings, setSettings, updateName }}>
             <Spin spinning={loading} percent={percent} fullscreen />
             {children}
         </AuthContext.Provider>
