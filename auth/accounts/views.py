@@ -78,9 +78,14 @@ class MyTokenObtainPairView(TokenObtainPairView):
 
         user = User.objects.get(email=payload.get('email'))
         
-        response_data = serializer.validated_data
-        response_data['name'] = user.first_name + ' ' + user.last_name
-        response_data['admin'] = user.is_staff
+        response_data = {
+            "data": {
+                "access": serializer.validated_data['access'],
+                "refresh": serializer.validated_data['refresh'],
+                "name": f"{user.first_name} {user.last_name}",
+                "admin": user.is_staff
+            }
+        }
 
         return Response(response_data, status=status.HTTP_200_OK)
     
