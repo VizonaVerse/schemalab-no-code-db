@@ -218,7 +218,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             incrementPercent();
             const response = await POST(
                 Services.AUTH,
-                "/logout",
+                "/logout/",
                 "Logout Request",
             );
             incrementPercent();
