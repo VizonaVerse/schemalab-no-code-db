@@ -99,7 +99,7 @@ axios.interceptors.response.use(
         if (error.response?.status === 401) {
             // JWT has expired or is just invalid
             localStorage.removeItem("user");
-
+            window.dispatchEvent(new Event("auth:logout"));
             // WIP: redirect user to login screen
         }
 

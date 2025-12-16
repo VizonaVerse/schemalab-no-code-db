@@ -99,13 +99,22 @@ const AuthContext = createContext<ProviderProps>({
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const storedInfo = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user') || '{}') : null
-    const [user, setUser] = useState<loginResult | null>(storedInfo ? JSON.parse(storedInfo) : null);
+    const [user, setUser] = useState<loginResult | null>(storedInfo);
     const [projects, setProjects] = useState<Project[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [percent, setPercent] = useState<number>(0);
     const navigate = useNavigate();
     const [settings, setSettings] = useState<boolean>(false);
     const [messageApi, contextHolder] = message.useMessage();
+
+    // Add event listener for axios interceptors
+    useEffect(() => {
+        window.addEventListener("auth:logout", logout);
+
+        return () => {
+            window.removeEventListener("auth:logout", logout);
+        }
+    });
 
     const incrementPercent = () => {
         if (percent >= 100) {
@@ -196,7 +205,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         } catch (error) {
             endPercent();
             setLoading(false);
-            displayError();
+            messageApi.open({
+                type: 'error',
+                content: 'User with this email already exists'
+            });
         }
     }
 
@@ -382,6 +394,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     return (
         <AuthContext.Provider value={{ user, login, register, logout, projects, loading, fetchProjects, deleteProject, resetPasswordAuthenticated, requestPasswordReset, resetPasswordConfirmation, settings, setSettings, updateName }}>
+            { contextHolder }
             <Spin spinning={loading} percent={percent} fullscreen />
             {children}
         </AuthContext.Provider>
