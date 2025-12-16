@@ -12,12 +12,11 @@ export type LoginType = {
 }
 
 export interface loginResult {
-        access: string;
-        admin: boolean;
-        name: string;
-        refresh: string;
+    access: string;
+    admin: boolean;
+    name: string;
+    refresh: string;
 }
-
 
 export type RegisterType = {
     email: string;
@@ -100,7 +99,7 @@ const AuthContext = createContext<ProviderProps>({
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const storedInfo = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user') || '{}') : null
-    const [user, setUser] = useState<loginResult | null>(storedInfo)
+    const [user, setUser] = useState<loginResult | null>(storedInfo ? JSON.parse(storedInfo) : null);
     const [projects, setProjects] = useState<Project[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [percent, setPercent] = useState<number>(0);
@@ -145,13 +144,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             incrementPercent();
 
             setTimeout(() => {
-                console.log("response.data::", response.data);
-                setUser(response.data.data);
+                const payload = response.data.data;
+                setUser(payload);
 
                 incrementPercent();
                 incrementPercent();
 
-                localStorage.setItem('user', JSON.stringify(response.data));
+                localStorage.setItem('user', JSON.stringify(payload));
                 console.log("Here before redirct");
                 navigate('/projects');
 

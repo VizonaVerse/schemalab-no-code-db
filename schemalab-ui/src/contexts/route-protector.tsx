@@ -11,8 +11,6 @@ export const RouteProtector = () => {
 
     useEffect(() => {
         const validateToken = async () => {
-            console.log("authenticating token");
-            console.log("user::", user);
             if (!user?.access) {
                 setValid(false);
                 setValidating(false);
