@@ -61,6 +61,41 @@ export function Canvas() {
     [updateNodeData]
   );
 
+  // compute join table position to the right of the rightmost table
+  const computeJoinTablePosition = useCallback(
+    (idA: string, idB: string, spacing = 50, defaultWidth = 240) => {
+      // prefer live nodes from the ReactFlow instance if available
+      const liveNodes = rfInstance?.getNodes?.() ?? nodes;
+
+      const a = liveNodes.find((n: any) => n.id === idA) ?? nodes.find((n: any) => n.id === idA);
+      const b = liveNodes.find((n: any) => n.id === idB) ?? nodes.find((n: any) => n.id === idB);
+
+      const aPos = a?.position ?? { x: 0, y: 0 };
+      const bPos = b?.position ?? { x: 0, y: 0 };
+
+      // use `any` casts for internal props that React Flow doesn't expose in the Node type
+      const aAny: any = a;
+      const bAny: any = b;
+
+      const aWidth = (aAny?.__rf?.width ?? aAny?.width ?? defaultWidth) as number;
+      const bWidth = (bAny?.__rf?.width ?? bAny?.width ?? defaultWidth) as number;
+
+      const aRight = aPos.x + aWidth;
+      const bRight = bPos.x + bWidth;
+
+      const rightmost = aRight >= bRight ? a : b;
+      const rightmostPos = rightmost?.position ?? { x: 0, y: 0 };
+      const rightmostAny: any = rightmost;
+      const rightmostWidth = (rightmostAny?.__rf?.width ?? rightmostAny?.width ?? defaultWidth) as number;
+
+      const x = rightmostPos.x + rightmostWidth + spacing;
+      const y = Math.round((aPos.y + bPos.y) / 2);
+
+      return { x, y };
+    },
+    [rfInstance, nodes]
+  );
+
   // const onNodeClick = (_: any, node: Node | null) => {
   //   setSelectedNodes([node]);
   // }
@@ -96,13 +131,11 @@ export function Canvas() {
 
       // Create join table node
       const joinTableId = `join_${selectedEdge.source}_${selectedEdge.target}_${Date.now()}`;
+      const pos = computeJoinTablePosition(selectedEdge.source, selectedEdge.target, 50);
       const joinTableNode = {
         id: joinTableId,
         type: "tableNode",
-        position: {
-          x: (nodes.find(n => n.id === selectedEdge.source)?.position.x ?? 0) + 150,
-          y: (nodes.find(n => n.id === selectedEdge.source)?.position.y ?? 0) + 50,
-        },
+        position: pos,
         data: {
           label: `${selectedEdge.source}_${selectedEdge.target}`,
           tableData: [
@@ -157,15 +190,13 @@ export function Canvas() {
       // Use a custom way to indicate many-to-many, e.g. sourceHandle/targetHandle or a UI toggle
       // For now, let's check if (params as Edge).type exists and is 'manyToManyEdge'
       if ('type' in params && params.type === "manyToManyEdge") {
-        // 1. Create a join table node
+        // 1. Create a join table node (position computed to the right of the rightmost table)
         const joinTableId = `join_${params.source}_${params.target}_${Date.now()}`;
+        const pos = computeJoinTablePosition(params.source as string, params.target as string, 50);
         const joinTableNode = {
           id: joinTableId,
           type: "tableNode",
-          position: {
-            x: (nodes.find(n => n.id === params.source)?.position.x ?? 0) + 150,
-            y: (nodes.find(n => n.id === params.source)?.position.y ?? 0) + 50,
-          },
+          position: pos,
           data: {
             label: `${params.source}_${params.target}`,
             tableData: [
@@ -191,7 +222,7 @@ export function Canvas() {
             source: joinTableId,
             sourceHandle: "row-0-left",
             target: params.source,
-            targetHandle: "row-0-right", // connect to left side of source table
+            targetHandle: "row-0-right", // connect to right side of source table
             type: "oneToManyEdge",
           },
           {
@@ -199,7 +230,7 @@ export function Canvas() {
             source: joinTableId,
             sourceHandle: "row-1-left",
             target: params.target,
-            targetHandle: "row-0-right", // connect to left side of target table
+            targetHandle: "row-0-right", // connect to right side of target table
             type: "oneToManyEdge",
           },
         ]);
