@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect, useLayoutEffect, useCallback } from "react";
-import { Handle, Position, useViewport } from "reactflow";
+import { Handle, Position, useViewport, useUpdateNodeInternals } from "reactflow";
 import "reactflow/dist/style.css";
 import "./table-node.scss";
 import { useCanvasContext } from "../../../../contexts/canvas-context";
@@ -75,6 +75,7 @@ export const TableNode = ({
   };
 }) => {
   const { mode, updateNodeData, selectedNodes, nodes, edges } = useCanvasContext();
+  const updateRfNodeInternals = useUpdateNodeInternals();
   const { zoom, x: viewportX, y: viewportY } = useViewport();
   const rowHeight = 28.5;
   const MAX_BUILD_ROWS = 7;
@@ -98,6 +99,12 @@ export const TableNode = ({
     unique: allTrue, // Unique
     default: "", // Default value
   });
+
+  useLayoutEffect(() => {
+    // Ensure handles are measured after mount / row-count changes / mode toggles
+    const raf = requestAnimationFrame(() => updateRfNodeInternals(id));
+    return () => cancelAnimationFrame(raf);
+  }, [id, mode, data?.tableData?.length, updateRfNodeInternals]);
 
   // Sync rowMeta length with tableData length
   useEffect(() => {
