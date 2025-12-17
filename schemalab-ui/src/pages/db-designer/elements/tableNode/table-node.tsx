@@ -121,10 +121,10 @@ export const TableNode = ({
       const next =
         prev.length > 0
           ? prev.map((row) => {
-              const resized = row.slice(0, targetCols);
-              while (resized.length < targetCols) resized.push("");
-              return resized;
-            })
+            const resized = row.slice(0, targetCols);
+            while (resized.length < targetCols) resized.push("");
+            return resized;
+          })
           : [Array.from({ length: targetCols }, () => "")];
 
       const changed =
@@ -277,7 +277,7 @@ export const TableNode = ({
     setTableData(updatedTable);
     updateNodeData(id, { tableData: updatedTable, rowMeta, dataModeRows });
   };
-// If pk is selected, make it exclusive
+  // If pk is selected, make it exclusive
   const updateRowMeta = (rowIndex: number, patch: Partial<RowMeta>) => {
     setRowMeta((prev) => {
       const normalized = [...prev];
@@ -360,7 +360,8 @@ export const TableNode = ({
   useEffect(() => {
     attrCellRefs.current = attrCellRefs.current.slice(0, tableData.length);
     if (isBuildMode) {
-      requestAnimationFrame(() => measureHandleOffsets());
+      // run synchronously after DOM updates so refs are populated before measuring
+      measureHandleOffsets();
     }
   }, [tableData.length, isBuildMode, measureHandleOffsets]);
 
@@ -521,31 +522,31 @@ export const TableNode = ({
                       {["DECIMAL", "CHARACTER", "VARCHAR", "NCHAR", "NVARCHAR"].includes(
                         rowMeta[rowIndex]?.type.split("(")[0]
                       ) && (
-                        <div className="popover-row">
-                          <label>
-                            {rowMeta[rowIndex]?.type.startsWith("DECIMAL")
-                              ? "Total digits, digits after decimal point"
-                              : "Length"}
-                          </label>
-                          <input
-                            type="text"
-                            placeholder={
-                              rowMeta[rowIndex]?.type.startsWith("DECIMAL")
-                                ? "e.g., 4,2"
-                                : "e.g., 255"
-                            }
-                            value={
-                              // Extract the parameters from the type string (e.g., "DECIMAL(4,2)" -> "4,2")
-                              rowMeta[rowIndex]?.type.match(/\(([^)]+)\)/)?.[1] || ""
-                            }
-                            onChange={(e) => {
-                              const baseType = rowMeta[rowIndex]?.type.split("(")[0]; // Extract the base type (e.g., "DECIMAL")
-                              const params = e.target.value; // Get the new parameters from the input
-                              updateRowMeta(rowIndex, { type: `${baseType}(${params})` }); // Update the type field directly
-                            }}
-                          />
-                        </div>
-                      )}
+                          <div className="popover-row">
+                            <label>
+                              {rowMeta[rowIndex]?.type.startsWith("DECIMAL")
+                                ? "Total digits, digits after decimal point"
+                                : "Length"}
+                            </label>
+                            <input
+                              type="text"
+                              placeholder={
+                                rowMeta[rowIndex]?.type.startsWith("DECIMAL")
+                                  ? "e.g., 4,2"
+                                  : "e.g., 255"
+                              }
+                              value={
+                                // Extract the parameters from the type string (e.g., "DECIMAL(4,2)" -> "4,2")
+                                rowMeta[rowIndex]?.type.match(/\(([^)]+)\)/)?.[1] || ""
+                              }
+                              onChange={(e) => {
+                                const baseType = rowMeta[rowIndex]?.type.split("(")[0]; // Extract the base type (e.g., "DECIMAL")
+                                const params = e.target.value; // Get the new parameters from the input
+                                updateRowMeta(rowIndex, { type: `${baseType}(${params})` }); // Update the type field directly
+                              }}
+                            />
+                          </div>
+                        )}
 
                       <div className="popover-row checkboxes">
                         <label>
