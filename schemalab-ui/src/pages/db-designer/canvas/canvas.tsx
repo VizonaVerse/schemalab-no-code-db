@@ -12,7 +12,7 @@ import ReactFlow, {
 } from "reactflow";
 import { EdgeMarkers } from "../elements/relationships/leftMarkerEdge";
 import "reactflow/dist/style.css";
-import "./canvas.css"; // Import styles for the table nodes
+import "./canvas.css";
 import { TableNode } from "../elements/tableNode/table-node";
 import { ManyToManyEdge } from "../elements/relationships/M2M";
 import { OneToManyEdge } from "../elements/relationships/O2M";
@@ -53,7 +53,7 @@ export function Canvas() {
     [setNodes]
   );
 
-  // Memoize nodeTypes to avoid recreating it on every render
+  // Memoize nodeTypes to avoid recreating it on each render
   const nodeTypes = useMemo(
     () => ({
       tableNode: (props: any) => <TableNode {...props} updateNodeData={updateNodeData} />,
@@ -73,7 +73,7 @@ export function Canvas() {
       const aPos = a?.position ?? { x: 0, y: 0 };
       const bPos = b?.position ?? { x: 0, y: 0 };
 
-      // use `any` casts for internal props that React Flow doesn't expose in the Node type
+      // use `any` casts for internal props that Reactflow doesn't expose in the Node type
       const aAny: any = a;
       const bAny: any = b;
 
@@ -95,10 +95,6 @@ export function Canvas() {
     },
     [rfInstance, nodes]
   );
-
-  // const onNodeClick = (_: any, node: Node | null) => {
-  //   setSelectedNodes([node]);
-  // }
 
   // Wrapper for onEdgesChange
   const onEdgesChange: OnEdgesChange = useCallback(
@@ -187,8 +183,7 @@ export function Canvas() {
 
   const onConnect = useCallback(
     (params: Connection | Edge) => {
-      // Use a custom way to indicate many-to-many, e.g. sourceHandle/targetHandle or a UI toggle
-      // For now, let's check if (params as Edge).type exists and is 'manyToManyEdge'
+      // check if (params as Edge).type exists and is 'manyToManyEdge'
       if ('type' in params && params.type === "manyToManyEdge") {
         // 1. Create a join table node (position computed to the right of the rightmost table)
         const joinTableId = `join_${params.source}_${params.target}_${Date.now()}`;

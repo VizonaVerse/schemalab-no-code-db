@@ -92,7 +92,7 @@ export const TableNode = ({
   const isSelected = selectedNodes?.some(n => n.id === id);
 
   const defaultMeta = (allTrue = false): RowMeta => ({
-    type: "INT", // Default type
+    type: "INT", // Data type (defaults to INT)
     nn: allTrue, // Not null
     pk: allTrue, // Primary key
     unique: allTrue, // Unique
@@ -480,7 +480,7 @@ export const TableNode = ({
                     onClick={() => togglePopover(rowIndex)}
                     aria-expanded={openPopoverRow === rowIndex}
                   >
-                    {/* show the computed comma-separated checkbox labels (or empty) */}
+                    {/* show the computed checkbox labels (or empty) */}
                     {(() => {
                       const meta = rowMeta[rowIndex] || defaultMeta();
                       const labels: string[] = [];
