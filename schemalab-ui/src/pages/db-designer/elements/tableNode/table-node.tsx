@@ -39,6 +39,29 @@ const TYPE_OPTIONS: string[] = [
   "DATETIME",
 ];
 
+function validateValueForType(value: string, type: string | undefined): boolean {
+  const base = (type || "").split("(")[0].trim().toUpperCase();
+
+  if (base === "BOOLEAN") {
+    return value === "1" || value === "0";
+  }
+
+  if (base === "DATE") {
+    // YYYY-MM-DD (basic validation)
+    const re = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
+    return re.test(value);
+  }
+
+  if (base === "DATETIME") {
+    // YYYY-MM-DD hh-mm-ss where time uses hyphens and a space separator
+    const re = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])\s([01]\d|2[0-3])-[0-5]\d-[0-5]\d$/;
+    return re.test(value);
+  }
+
+  // default: no restriction
+  return true;
+}
+
 export const TableNode = ({
   id,
   data,
@@ -137,6 +160,21 @@ export const TableNode = ({
   const handleDoubleClickDataModeCell = (rowIndex: number, colIndex: number) => {
     const newValue = prompt("Edit cell value:", dataModeRows[rowIndex][colIndex]);
     if (newValue !== null) {
+      const colType = rowMeta?.[colIndex]?.type || "";
+      if (!validateValueForType(newValue, colType)) {
+        const base = (colType || "").split("(")[0].toUpperCase() || "TEXT";
+        if (base === "BOOLEAN") {
+          alert("BOOLEAN values must be '1' or '0'.");
+        } else if (base === "DATE") {
+          alert("DATE must be in format YYYY-MM-DD.");
+        } else if (base === "DATETIME") {
+          alert("DATETIME must be in format YYYY-MM-DD hh-mm-ss (space between date and time).");
+        } else {
+          alert("Value does not match required format.");
+        }
+        return;
+      }
+
       const updatedRows = [...dataModeRows];
       updatedRows[rowIndex][colIndex] = newValue;
       setDataModeRows(updatedRows);
@@ -540,7 +578,24 @@ export const TableNode = ({
                         <label>Default</label>
                         <input
                           value={rowMeta[rowIndex]?.default || ""}
-                          onChange={e => updateRowMeta(rowIndex, { default: e.target.value })}
+                          onChange={e => {
+                            const val = e.target.value;
+                            const colType = rowMeta[rowIndex]?.type || "";
+                            if (validateValueForType(val, colType)) {
+                              updateRowMeta(rowIndex, { default: val });
+                            } else {
+                              const base = (colType || "").split("(")[0].toUpperCase();
+                              if (base === "BOOLEAN") {
+                                alert("BOOLEAN default must be '1' or '0'.");
+                              } else if (base === "DATE") {
+                                alert("DATE default must be YYYY-MM-DD.");
+                              } else if (base === "DATETIME") {
+                                alert("DATETIME default must be YYYY-MM-DD hh-mm-ss.");
+                              } else {
+                                alert("Invalid default value.");
+                              }
+                            }
+                          }}
                           placeholder="e.g. 0"
                         />
                       </div>
