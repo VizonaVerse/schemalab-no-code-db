@@ -27,7 +27,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'a_weak_default_key_for_dev')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['host.docker.internal', 'localhost']
 
 
 # Application definition
