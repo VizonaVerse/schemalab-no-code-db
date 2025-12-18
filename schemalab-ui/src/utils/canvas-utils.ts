@@ -195,7 +195,7 @@ export function formatExportPayload(nodes: any[], edges: any[], projectName: str
             position: normalized.position,
             data: safeData,
             attributes: normalized.attributes,
-            dataModeRows: normalized.dataModeRows,
+            dataModelRows: normalized.dataModeRows,
         };
     });
 
