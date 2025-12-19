@@ -78,7 +78,7 @@ const initialNodeTemplate: Node<TableNodeData>[] = [
                     default: "", // Default value
                 },
             ],
-            dataModeRows: [[""]],
+            dataModeRows: [["0"]],
         },
         position: { x: 500, y: 0 },
     },
@@ -104,7 +104,7 @@ const initialNodeTemplate: Node<TableNodeData>[] = [
                     default: "",
                 },
             ],
-            dataModeRows: [[""]],
+            dataModeRows: [["0", "John Doe"]],
         },
         position: { x: 100, y: 100 },
     },
