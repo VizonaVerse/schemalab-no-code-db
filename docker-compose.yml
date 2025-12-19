@@ -21,12 +21,14 @@ services:
       context: ./schemalab-ui
       dockerfile: Dockerfile
     env_file:
-     - ./schemalab-ui/.env
+     - ./schemalab-ui/.env.production.local
     networks:
       - app-network
   
   schema:
-    build: ./schema
+    build:
+      context: ./schema
+      dockerfile: Dockerfile
     env_file:
       - ./schema/.env
     networks:

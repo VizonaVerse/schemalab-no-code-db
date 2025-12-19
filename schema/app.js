@@ -1,5 +1,5 @@
 //var session = require('express-session');
-require('dotenv').config({ path: '.env' });
+require('dotenv').config({ path: '.env.production.local' });
 
 const express = require('express');
 const cors = require('cors');
