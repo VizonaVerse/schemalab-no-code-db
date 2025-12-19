@@ -27,6 +27,7 @@ services:
   
   schema:
     build: ./schema
+    dockerfile: Dockerfile
     env_file:
       - ./schema/.env
     networks:
