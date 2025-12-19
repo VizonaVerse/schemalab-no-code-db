@@ -30,7 +30,7 @@ services:
       context: ./schema
       dockerfile: Dockerfile
     env_file:
-      - ./schema/.env
+      - ./schema/.env.production.local
     networks:
       - app-network
 
