@@ -80,7 +80,6 @@ export const DELETE = <T>(service: Services, url?: string, message?: string, dat
 axios.interceptors.request.use(
     (config) => {
         const storedUser = localStorage.getItem("user");
-        console.log("interceptor::", storedUser);
         if (storedUser) {
             const user: loginResult = JSON.parse(storedUser);
 
