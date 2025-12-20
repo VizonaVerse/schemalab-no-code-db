@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/auth-context';
 import React, { useState } from "react";
 import { message, Modal } from "antd";
+import { ProfileDropDown } from '../profileDropDown';
+import { SettingsModal } from '../settingsModal';
 
 interface ProjectCardProps {
     id: number;
@@ -197,8 +199,10 @@ export const ProjectManagement = () => {
     return (
         <div className="project-management-page">
             {contextHolder}
+            <SettingsModal />
             <header className="projects-header">
                 <h1>Projects</h1>
+                <ProfileDropDown />
             </header>
 
             <div className="projects-tabs">

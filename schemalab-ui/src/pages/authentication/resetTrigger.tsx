@@ -50,7 +50,7 @@ export const ResetTrigger = () => {
             </div>
 
             <div className="input">
-                <p className="label">Email</p>
+                <p className="label">Email:</p>
                 <Input 
                     placeholder="Enter Email"
                     prefix={<UserOutlined style={{ color: 'rgba(0, 0, 0, ..25)', marginRight: "4px"}} />}
@@ -60,9 +60,9 @@ export const ResetTrigger = () => {
                 />
             </div>
 
-            <div className="create">
+            <div className="send">
                 <Button type="primary" loading={btnLoading} onClick={handleSubmit} className={form.showErrorIcon ? "error" : undefined} block>{form.showErrorIcon ? (<CloseOutlined />) : ("Request Reset")}</Button>
-                 <a onClick={() => navigate('/login')} className="link">Login.</a>
+                 <a onClick={() => navigate('/login')} className="link">Login</a>
             </div>
         </div>
     );

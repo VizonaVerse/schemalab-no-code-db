@@ -26,8 +26,7 @@ export type RegisterType = {
 }
 
 export type UpdateName = {
-    first_name: string;
-    last_name: string;
+    name: string;
 }
 
 export type PasswordResetType = {
@@ -45,7 +44,7 @@ export type passwordResetConfirm = {
 
 interface ProviderProps {
     user?: loginResult | null,
-    login(data: LoginType): void,
+    login(data: LoginType): Promise<boolean>,
     register(data: RegisterType): void,
     logout(): void,
     resetPasswordAuthenticated(data: PasswordResetType): void;
@@ -82,7 +81,7 @@ interface AuthUser {
 
 const AuthContext = createContext<ProviderProps>({
     user: null,
-    login: () => { },
+    login: () => Promise.resolve(false),
     register: () => { },
     logout: () => { },
     resetPasswordAuthenticated: () => { },
@@ -116,6 +115,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
     });
 
+    useEffect(() => {
+        const startupCheck = async () => {
+            if (!user) return;
+
+            checkAuth();
+        }
+
+        startupCheck();
+    }, []);
+
     const incrementPercent = () => {
         if (percent >= 100) {
             let ptg = percent;
@@ -130,13 +139,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const checkAuth = async () => {
         try {
-            await GET(
+            const response = await GET(
                 Services.AUTH,
                 "/me"
             );
             return true;
         } catch (error) {
-            return false;
+            logout();
         }
     }
 
@@ -152,29 +161,32 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             );
             incrementPercent();
 
-            setTimeout(() => {
-                const payload = response.data.data;
-                setUser(payload);
+            await new Promise(resolve => {
+                setTimeout(() => {
+                    const payload = response.data.data;
+                    setUser(payload);
 
-                incrementPercent();
-                incrementPercent();
+                    incrementPercent();
+                    incrementPercent();
 
-                localStorage.setItem('user', JSON.stringify(payload));
-                console.log("Here before redirct");
-                navigate('/projects');
-
-                incrementPercent();
-                endPercent();
-                setLoading(false);
-            }, 1000);
+                    localStorage.setItem('user', JSON.stringify(payload));
+                    setUser(payload);
+                    navigate('/projects');
+                    incrementPercent();
+                    endPercent();
+                    setLoading(false);
+                    resolve(true);
+                }, 1000);
+            });
+            return true;
         } catch (error) {
-            console.log("in error");
             endPercent();
             setLoading(false);
             messageApi.open({
                 type: 'error',
                 content: 'Invalid credentials'
-            })
+            });
+            return false;
         }
     }
 
@@ -216,11 +228,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         try {
             setLoading(true);
             incrementPercent();
-            const response = await POST(
-                Services.AUTH,
-                "/logout/",
-                "Logout Request",
-            );
+            // const response = await POST(
+            //     Services.AUTH,
+            //     "/logout/",
+            //     "Logout Request",
+            //     user?.access,
+            // );
             incrementPercent();
             setUser(null);
             incrementPercent();
@@ -228,6 +241,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             incrementPercent();
             endPercent();
             setLoading(false);
+            navigate("/login");
         } catch (error) {
             endPercent();
             setLoading(false);
@@ -243,7 +257,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             if (auth) {
                 const response = await POST(
                     Services.AUTH,
-                    "/password/change",
+                    "/password/change/",
                     "Change Password Request",
                     data
                 );
@@ -371,7 +385,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         incrementPercent();
         // send the request to auth service
         try {
-            const response = await POST<registerResult>(
+            const response = await POST(
                 Services.AUTH,
                 "/updateName",
                 "Update name Request",

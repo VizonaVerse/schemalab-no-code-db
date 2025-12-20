@@ -49,8 +49,16 @@ export const Login = () => {
                 password: form.password,
                 // remember_me: form.remember_me,
             }
-            login(loginObj);
+            const result = login(loginObj);
+            if (!result) {
+                setBtnLoading(false);
+                updateField("passwordValid", false);
+            }
         }
+    }
+
+    const handleForgotPassword = () => {
+        navigate('/reset');
     }
 
     // const onChange: CheckboxProps['onChange'] = (e) => {
@@ -88,6 +96,8 @@ export const Login = () => {
                     onChange={e => {updateField("password", e.target.value); updateField("passwordValid", true); }}
                 />
             </div>
+
+            <a onClick={handleForgotPassword} className="forgot">Forgot your password?</a>
 
             {/* <div className="checkbox">
                 <Checkbox onChange={onChange}>Remember Me</Checkbox>

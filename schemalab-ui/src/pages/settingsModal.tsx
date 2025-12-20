@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Modal, Input, message } from 'antd';
 import { useAuth, PasswordResetType, UpdateName } from '../contexts/auth-context';
+import './authentication/authentication.scss';
 
 interface FormState {
-    first_name: string,
-    last_name: string,
+    name: string | undefined,
     oldPassword: string,
     newPassword: string,
     passwordConfirm: string,
@@ -19,8 +19,7 @@ export const SettingsModal = () => {
 
     // Data for inputs
     const [form, setForm] = useState<FormState>({
-        first_name: "",
-        last_name: "",
+        name: user?.name,
         oldPassword: "",
         newPassword: "",
         passwordConfirm: "",
@@ -36,11 +35,11 @@ export const SettingsModal = () => {
     })
 
     const handleNameUpdate = async () => {
+        console.log("handleUpdateName::", );
         if (form.newPassword === form.passwordConfirm) {
+            if (!form.name) return error("Invalid name entered");
             const nameObj: UpdateName = {
-                first_name: form.first_name,
-                last_name: form.last_name,
-                // remember_me: form.remember_me,
+                name: form.name,
             }
             await updateName(nameObj);
             setConfirmLoading(false);
@@ -52,6 +51,10 @@ export const SettingsModal = () => {
 
     const handlePasswordReset = async () => {
         setConfirmLoading(true);
+        if (!form.newPassword || !form.oldPassword || !form.passwordConfirm) {
+            return error("One of the password fields was missing.");
+        }
+
         if (form.newPassword === form.passwordConfirm) {
             const passwordObj: PasswordResetType = {
                 password_old: form.oldPassword,
@@ -89,12 +92,20 @@ export const SettingsModal = () => {
                 open={settings}
                 onOk={() => handleNameUpdate()}
                 onCancel={() => setSettings(false)}
-                width={1000}
+                className="settings"
             >
-                {/* <Input disabled value={}/> */}
-                {/* <Input value={}/>
-                <Input value={}/> */}
-                <Button onClick={() => setReset(true)}>Reset Password</Button>
+                <div className="content">
+                    <div className="name-change">
+                        <div className="field">
+                            <p className="label">Name:</p>
+                            <Input className="input" value={form.name} onChange={e => { updateField("name", e.target.value); }} />
+                        </div>
+                    </div>
+                    <div className="reset">
+                        <p className="label">Reset password:</p>
+                        <Button onClick={() => setReset(true)}>Reset Password</Button>
+                    </div>
+                </div>
             </Modal>
             <Modal
                 title="Reset Password"
@@ -103,9 +114,9 @@ export const SettingsModal = () => {
                 onCancel={() => setReset(false)}
                 confirmLoading={confirmLoading}
             >
-                <Input placeholder="old password" value={form.oldPassword} />
-                <Input placeholder="new password" value={form.newPassword}/>
-                <Input placeholder="confirm new password" value={form.passwordConfirm}/>
+                <Input.Password placeholder="old password" value={form.oldPassword} onChange={e => { updateField("oldPassword", e.target.value); }}/>
+                <Input.Password placeholder="new password" value={form.newPassword} onChange={e => { updateField("newPassword", e.target.value); }}/>
+                <Input.Password placeholder="confirm new password" value={form.passwordConfirm} onChange={e => { updateField("passwordConfirm", e.target.value); }}/>
                 <Button onClick={() => handlePasswordReset()}>Reset Password</Button>
             </Modal>
         </>
