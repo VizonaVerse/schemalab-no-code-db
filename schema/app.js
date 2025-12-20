@@ -1,12 +1,12 @@
 //var session = require('express-session');
-require('dotenv').config({ path: '.env.production.local' });
+require('dotenv-flow').config();
 
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 
 const app = express();
-
+console.log(process.env.FRONT_END_URL);
 const allowedOriginsRaw = (process.env.FRONT_END_URL || '')
   .split(',')
   .map(origin => origin.trim())
