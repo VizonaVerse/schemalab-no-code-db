@@ -27,15 +27,14 @@ test_schemalab-ui:
   script:
     - echo "Testing schemalab-ui..."
     - cd schemalab-ui
-    - npm test -- --passWithNoTests
+    - npm run test:e2e
   rules:
   - when: on_success
 
-# deploy_schemalab-ui:
-#   stage: deploy
-#   script:
-#     - echo "Deploying schemalab-ui..."
-#     - docker compose build
-#     - docker compose up -d
-#   only:
-#     - main
+deploy_schemalab-ui:
+  stage: deploy
+  script:
+    - echo "Deploying schemalab-ui..."
+    - docker build -t schemalab-ui .
+  only:
+    - main
