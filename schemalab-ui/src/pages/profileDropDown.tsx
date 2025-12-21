@@ -12,7 +12,11 @@ interface FormState {
     passwordConfirm: string,
 }
 
-export const ProfileDropDown = () => {
+interface ProfileDropDownProps {
+    dataTestid: string
+}
+
+export const ProfileDropDown = ({dataTestid}: ProfileDropDownProps) => {
     const { setSettings, user, logout } = useAuth();
 
     const onMenuClick: MenuProps["onClick"] = ({ key }) => {
@@ -31,11 +35,11 @@ export const ProfileDropDown = () => {
     const items: MenuProps['items'] = [
         {
             key: '1',
-            label: user?.name,
+            label: <span data-testid={`${dataTestid}-dropdown-name`}>user?.name</span>,
         },
         {
             key: '2',
-            label: 'Settings',
+            label: <span data-testid={`${dataTestid}-dropdown-settings`}>Settings</span>,
             icon: <SettingOutlined />,
         },
         {
@@ -43,7 +47,7 @@ export const ProfileDropDown = () => {
         },
         {
             key: '3',
-            label: 'Logout',
+            label: <span data-testid={`${dataTestid}-dropdown-logout`}>Logout</span>,
             icon: <LogoutOutlined />,
             danger: true,
         },
@@ -57,7 +61,7 @@ export const ProfileDropDown = () => {
                 onClick: onMenuClick,
             }}
             placement="bottomLeft">
-            <Button>
+            <Button data-testid={`${dataTestid}-dropdown`}>
                 <Space>
                     {user?.name}
                     <DownOutlined />

@@ -10,8 +10,12 @@ interface FormState {
     passwordConfirm: string,
 }
 
+interface SettingsProps {
+    dataTestid: string
+}
 
-export const SettingsModal = () => {
+
+export const SettingsModal = ({dataTestid}: SettingsProps) => {
     const { settings, setSettings, updateName, resetPasswordAuthenticated, user } = useAuth();
     const [reset, setReset] = useState<boolean>(false);
     const [confirmLoading, setConfirmLoading] = useState(false);
@@ -35,7 +39,6 @@ export const SettingsModal = () => {
     })
 
     const handleNameUpdate = async () => {
-        console.log("handleUpdateName::", );
         if (form.newPassword === form.passwordConfirm) {
             if (!form.name) return error("Invalid name entered");
             const nameObj: UpdateName = {
@@ -91,19 +94,27 @@ export const SettingsModal = () => {
                 centered
                 open={settings}
                 onOk={() => handleNameUpdate()}
+                okButtonProps={{
+                    'data-testid': `${dataTestid}-modal-ok`
+                }}
                 onCancel={() => setSettings(false)}
+                cancelButtonProps={{
+                    'data-testid': `${dataTestid}-modal-cancel`
+                }}
                 className="settings"
             >
                 <div className="content">
                     <div className="name-change">
                         <div className="field">
                             <p className="label">Name:</p>
-                            <Input className="input" value={form.name} onChange={e => { updateField("name", e.target.value); }} />
+                            <Input className="input" value={form.name} onChange={e => { updateField("name", e.target.value); }} data-testid={`${dataTestid}-modal-name`}/>
                         </div>
                     </div>
                     <div className="reset">
                         <p className="label">Reset password:</p>
-                        <Button onClick={() => setReset(true)}>Reset Password</Button>
+                        <Button onClick={() => setReset(true)}>
+                            Reset Password
+                        </Button>
                     </div>
                 </div>
             </Modal>

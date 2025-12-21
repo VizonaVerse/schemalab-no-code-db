@@ -199,10 +199,10 @@ export const ProjectManagement = () => {
     return (
         <div className="project-management-page">
             {contextHolder}
-            <SettingsModal />
+            <SettingsModal dataTestid="project"/>
             <header className="projects-header">
                 <h1>Projects</h1>
-                <ProfileDropDown />
+                <ProfileDropDown dataTestid="project"/>
             </header>
 
             <div className="projects-tabs">
