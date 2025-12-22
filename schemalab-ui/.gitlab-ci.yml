@@ -27,12 +27,8 @@ test_schemalab-ui:
   script:
     - echo "Testing schemalab-ui..."
     - cd schemalab-ui
+    - npm install
     - npm run test:e2e
-  artifacts:
-    paths:
-      - schemalab-ui/node_modules/
-      - schemalab-ui/build/
-    expire_in: 1h
   rules:
   - when: on_success
 
