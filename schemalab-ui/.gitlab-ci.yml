@@ -21,7 +21,7 @@ build_schemalab-ui:
 
 test_schemalab-ui:
   stage: test
-  image: node:20
+  image: mcr.microsoft.com/playwright:v1.57.0-jammy
   dependencies:
     - build_schemalab-ui
   script:
