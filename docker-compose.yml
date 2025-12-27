@@ -1,3 +1,7 @@
+# To start using docker swarm 
+# 1. docker swarm init 
+# 2. docker stack deploy -c docker-compose.yml schemalab
+
 name: SchemaLab
 
 services:
@@ -15,10 +19,6 @@ services:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
     networks:
       - app-network
-    deploy:
-      replicas: 1
-      restart_policy:
-        condition: on-failure
 
   schemalabui:
     build:
@@ -28,10 +28,6 @@ services:
      - ./schemalab-ui/.env.production.local
     networks:
       - app-network
-    deploy:
-      replicas: 3
-      restart_policy:
-        condition: on-failure
   
   schema:
     build:
@@ -41,10 +37,6 @@ services:
       - ./schema/.env.production.local
     networks:
       - app-network
-    deploy:
-      replicas: 1
-      restart_policy:
-        condition: on-failure
 
   # auth_db:
   #   image: postgres:14-alpine
