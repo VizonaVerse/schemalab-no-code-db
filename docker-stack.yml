@@ -33,6 +33,34 @@ services:
       replicas: 1
       restart_policy:
         condition: on-failure
+  
+  management:
+    image: nginx:alpine
+    env_file:
+      - ./management/.env.production
+    networks:
+      - app-network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+  
+  management_db:
+    image: postgres:16
+    env_file:
+      - ./management/.env.production
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - management_pgdata:/var/lib/postgresql/data
+    networks:
+      - app-network
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
 
 networks:
   app-network:
