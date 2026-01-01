@@ -27,7 +27,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'a_weak_default_key_for_dev')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['host.docker.internal', 'localhost']
 
 
 # Application definition
@@ -147,11 +147,13 @@ SIMPLE_JWT = {
     "BLACKLIST_AFTER_ROTATION": True,
 }
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8080",  # Frontend
-    "http://localhost:3000",  # Another frontend
-    "http://localhost:6060",  # Management Service
-]
+CORS_ALLOW_ALL_ORIGINS = True
+
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:8080",  # Frontend
+#     "http://localhost:3000",  # Another frontend
+#     "http://localhost:6060",  # Management Service
+# ]
 
 AUTHENTICATION_BACKENDS = ['accounts.backends.EmailBackend']
 
