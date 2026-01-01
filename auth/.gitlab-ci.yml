@@ -2,7 +2,8 @@ image: python:3.10-slim
 
 stages:
   - test
-  - deploy 
+  # - deploy
+  - push
 
 run_tests:
   stage: test
@@ -14,17 +15,27 @@ run_tests:
     - DB_NAME=test_auth_db DB_HOST=test_host DB_USER=test_user DB_PASSWORD=test_pass python manage.py test --settings=auth_project.settings --keepdb
     
   rules:
-    - if: $CI_COMMIT_BRANCH
-      changes:
-        - auth/**/*
+    - when: always
 
-deploy_to_server:
-  stage: deploy
+# deploy_to_server:
+#   stage: deploy
+#   script:
+#     - echo "Deployment confirmed. The code passed Python tests."
+#     - echo "The final image build for deployment must be done by a dedicated runner."
+#   rules:
+#     - if: $CI_COMMIT_BRANCH
+#       changes:
+#         - auth/**/*
+
+push_auth:
+  stage: push
+  image: docker:24
+  services:
+    - docker:24-dind
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
   script:
-    - echo "Deployment confirmed. The code passed Python tests."
-    - echo "The final image build for deployment must be done by a dedicated runner."
+    - docker build -t $CI_REGISTRY_IMAGE/auth:latest . 
+    - docker push $CI_REGISTRY_IMAGE/auth:latest
   rules:
-    - if: $CI_COMMIT_BRANCH
-      changes:
-        - auth/**/*
-      when: manual
+    - if: '$CI_COMMIT_BRANCH == "main"'

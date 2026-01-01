@@ -1,6 +1,7 @@
 import os
 import json
 from typing import Optional, Tuple
+import logging
 
 from rest_framework.authentication import BaseAuthentication
 from rest_framework import exceptions
@@ -45,8 +46,10 @@ class RemoteAuth(BaseAuthentication):
 
         try:
             resp = requests.get(verify_url, headers=headers, timeout=5)
-        except requests.RequestException:
-            raise exceptions.AuthenticationFailed('Unable to reach auth service for token verification')
+        except requests.RequestException as exc:
+            logger = logging.getLogger(__name__)
+            logger.exception('Failed to reach auth service at %s', verify_url)
+            raise exceptions.AuthenticationFailed(f'Unable to reach auth service for token verification: {exc}')
 
         if resp.status_code != 200:
             # Token invalid or expired

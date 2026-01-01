@@ -49,8 +49,16 @@ export const Login = () => {
                 password: form.password,
                 // remember_me: form.remember_me,
             }
-            login(loginObj);
+            const result = login(loginObj);
+            if (!result) {
+                setBtnLoading(false);
+                updateField("passwordValid", false);
+            }
         }
+    }
+
+    const handleForgotPassword = () => {
+        navigate('/reset');
     }
 
     // const onChange: CheckboxProps['onChange'] = (e) => {
@@ -63,7 +71,7 @@ export const Login = () => {
     return (
         <div className="login">
             <div className="heading">
-                <h1 className="title">Login to Account</h1>
+                <h1 className="title" data-testid="title">Login to Account</h1>
                 <p className="description">Login to your existing account to continue designing your database.</p>
             </div>
 
@@ -75,6 +83,7 @@ export const Login = () => {
                     className={`input-box ${!form.emailValid ? "invalid" : ""}`}
                     value={form.email}
                     onChange={e => { updateField("email", e.target.value); updateField("emailValid", true); }}
+                    data-testid="email_input"
                 />
             </div>
 
@@ -86,15 +95,20 @@ export const Login = () => {
                     className={`input-box ${!form.passwordValid ? "invalid" : ""}`}
                     value={form.password}
                     onChange={e => {updateField("password", e.target.value); updateField("passwordValid", true); }}
+                    data-testid="password_input"
                 />
             </div>
+
+            <a onClick={handleForgotPassword} className="forgot">Forgot your password?</a>
 
             {/* <div className="checkbox">
                 <Checkbox onChange={onChange}>Remember Me</Checkbox>
             </div> */}
 
             <div className="create">
-                <Button type="primary" loading={btnLoading} onClick={handleSubmit} className={form.showErrorIcon ? "error" : undefined} block>{form.showErrorIcon ? (<CloseOutlined />) : ("Login")}</Button>
+                <Button type="primary" loading={btnLoading} onClick={handleSubmit} className={form.showErrorIcon ? "error" : undefined} block data-testid="login_button">
+                    {form.showErrorIcon ? (<CloseOutlined />) : ("Login")}
+                </Button>
                 <p className="comment">Don't Have an Account? <a onClick={() => navigate('/register')} className="link">Register now.</a></p>
                 {/* <a onClick={changeStep} className="link">Forgot password?</a> href to a screen to enter email */}
             </div>

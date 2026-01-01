@@ -4,10 +4,12 @@
     padding: 20px;
 
     .projects-header {
+        display: flex;
         background-color: #176b87;
         color: white;
         padding: 20px 30px;
         margin: -20px -20px 20px -20px;
+        justify-content: space-between;
 
         h1 {
             margin: 0;
