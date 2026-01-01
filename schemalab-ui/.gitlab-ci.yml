@@ -24,6 +24,9 @@ test_schemalab-ui:
   image: mcr.microsoft.com/playwright:v1.57.0-jammy
   dependencies:
     - build_schemalab-ui
+  before_script:
+    - apt-get update
+    - apt-get install -y docker-compose-plugin
   script:
     - echo "Testing schemalab-ui..."
     - echo "Building auth for tests."
