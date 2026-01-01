@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/auth-context';
 import React, { useState } from "react";
 import { message, Modal } from "antd";
+import { ProfileDropDown } from '../profileDropDown';
+import { SettingsModal } from '../settingsModal';
 
 interface ProjectCardProps {
     id: number;
@@ -185,6 +187,7 @@ export const ProjectManagement = () => {
     const { projects, loading } = useAuth();
     const navigate = useNavigate();
     const [messageApi, contextHolder] = message.useMessage();
+    const safeProjects = Array.isArray(projects) ? projects : [];
 
     const handleNewProject = () => {
         navigate('/dev/db-designer');
@@ -197,8 +200,10 @@ export const ProjectManagement = () => {
     return (
         <div className="project-management-page">
             {contextHolder}
+            <SettingsModal dataTestid="project"/>
             <header className="projects-header">
                 <h1>Projects</h1>
+                <ProfileDropDown dataTestid="project"/>
             </header>
 
             <div className="projects-tabs">
@@ -210,21 +215,25 @@ export const ProjectManagement = () => {
             </div>
 
             <div className="projects-grid">
-                {projects.map((project) => (
-                    <ProjectCard
-                        key={project.id}
-                        id={project.id}
-                        name={
-                            project.name ||
-                            project.data?.projectName ||
-                            project.data?.data?.projectName ||
-                            "Untitled"
-                        }
-                        description={project.description}
-                        data={project.data}
-                        messageApi={messageApi}
-                    />
-                ))}
+                {safeProjects.length === 0 ? (
+                    <div className="empty-projects">No projects yet. Click "New Project" to start.</div>
+                ) : (
+                    safeProjects.map((project) => (
+                        <ProjectCard
+                            key={project.id}
+                            id={project.id}
+                            name={
+                                project.name ||
+                                project.data?.projectName ||
+                                project.data?.data?.projectName ||
+                                "Untitled"
+                            }
+                            description={project.description}
+                            data={project.data}
+                            messageApi={messageApi}
+                        />
+                    ))
+                )}
             </div>
         </div>
     );

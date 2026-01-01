@@ -27,15 +27,15 @@ function normalizeTable(node: any) {
 
     const normalizedDataModeRowsRaw = Array.isArray(node?.data?.dataModeRows)
         ? node.data.dataModeRows.map((row: string[]) => {
-              if (!Array.isArray(row)) {
-                  return Array.from({ length: columnCount }, () => "");
-              }
-              const trimmed = row.slice(0, columnCount).map((cell) => (typeof cell === "string" ? cell : ""));
-              while (trimmed.length < columnCount) {
-                  trimmed.push("");
-              }
-              return trimmed;
-          })
+            if (!Array.isArray(row)) {
+                return Array.from({ length: columnCount }, () => "");
+            }
+            const trimmed = row.slice(0, columnCount).map((cell) => (typeof cell === "string" ? cell : ""));
+            while (trimmed.length < columnCount) {
+                trimmed.push("");
+            }
+            return trimmed;
+        })
         : [];
 
     const dataModeRows = normalizedDataModeRowsRaw.length
@@ -102,12 +102,12 @@ export function mapProjectToNodesEdges(projectData: any) {
 
         let rowMeta = Array.isArray(table.attributes)
             ? table.attributes.map((meta: any) => ({
-                  type: typeof meta?.type === "string" && meta.type.trim() ? meta.type : "TEXT",
-                  nn: Boolean(meta?.nn),
-                  pk: Boolean(meta?.pk),
-                  unique: Boolean(meta?.unique),
-                  default: typeof meta?.default === "string" ? meta.default : "",
-              }))
+                type: typeof meta?.type === "string" && meta.type.trim() ? meta.type : "TEXT",
+                nn: Boolean(meta?.nn),
+                pk: Boolean(meta?.pk),
+                unique: Boolean(meta?.unique),
+                default: typeof meta?.default === "string" ? meta.default : "",
+            }))
             : [];
 
         while (rowMeta.length < tableRows.length) {
@@ -121,15 +121,15 @@ export function mapProjectToNodesEdges(projectData: any) {
 
         const normalizedDataModeRowsRaw = Array.isArray(table.dataModeRows)
             ? table.dataModeRows.map((row: any[]) => {
-                  if (!Array.isArray(row)) {
-                      return Array.from({ length: columnCount }, () => "");
-                  }
-                  const trimmed = row.slice(0, columnCount).map((cell) => (typeof cell === "string" ? cell : ""));
-                  while (trimmed.length < columnCount) {
-                      trimmed.push("");
-                  }
-                  return trimmed;
-              })
+                if (!Array.isArray(row)) {
+                    return Array.from({ length: columnCount }, () => "");
+                }
+                const trimmed = row.slice(0, columnCount).map((cell) => (typeof cell === "string" ? cell : ""));
+                while (trimmed.length < columnCount) {
+                    trimmed.push("");
+                }
+                return trimmed;
+            })
             : [];
 
         const normalizedDataModeRows = normalizedDataModeRowsRaw.length
@@ -195,7 +195,7 @@ export function formatExportPayload(nodes: any[], edges: any[], projectName: str
             position: normalized.position,
             data: safeData,
             attributes: normalized.attributes,
-            dataModeRows: normalized.dataModeRows,
+            dataModelRows: normalized.dataModeRows,
         };
     });
 

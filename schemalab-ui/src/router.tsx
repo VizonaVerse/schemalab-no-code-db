@@ -20,6 +20,7 @@ export default function Router() {
                             <Route path="/dev/db-designer/:id" element={<DbDesigner example="" />} /> {/* For existing projects */}
                             <Route path="/dev/db-designer" element={<DbDesigner example="" />} /> {/* For new projects */}
                         </Route>
+                        <Route path="/dev/settings" element={<DbDesigner example="" />} /> {/* For new projects */}
                     </Routes>
                 </AuthProvider>
             </BrowserRouter>

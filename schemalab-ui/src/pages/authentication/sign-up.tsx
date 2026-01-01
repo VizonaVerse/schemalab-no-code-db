@@ -86,7 +86,7 @@ export const Register = () => {
     return (
         <div className="register">
             <div className="heading">
-                <h1 className="title">Create Account</h1>
+                <h1 className="title" data-testid="title">Create Account</h1>
                 <p className="description">Sign up to start designing your first database.</p>
             </div>
 
@@ -98,6 +98,7 @@ export const Register = () => {
                     className={`input-box ${!form.first_nameValid ? "invalid" : ""}`}
                     value={form.first_name}
                     onChange={e => { updateField("first_name", e.target.value); updateField("first_nameValid", true); }}
+                    data-testid="firstName_input"
                 />
             </div>
 
@@ -109,6 +110,7 @@ export const Register = () => {
                     className={`input-box ${!form.last_nameValid ? "invalid" : ""}`}
                     value={form.last_name}
                     onChange={e => { updateField("last_name", e.target.value); updateField("last_nameValid", true); }}
+                    data-testid="lastName_input"
                 />
             </div>
 
@@ -120,6 +122,7 @@ export const Register = () => {
                     className={`input-box ${!form.emailValid ? "invalid" : ""}`}
                     value={form.email}
                     onChange={e => {updateField("email", e.target.value); updateField("emailValid", true); }}
+                    data-testid="email_input"
                 />
             </div>
 
@@ -131,6 +134,7 @@ export const Register = () => {
                     className={`input-box ${!form.passwordValid ? "invalid" : ""}`}
                     value={form.password}
                     onChange={e => {updateField("password", e.target.value); updateField("passwordValid", true); }}
+                    data-testid="password_input"
                 />
             </div>
 
@@ -151,7 +155,9 @@ export const Register = () => {
             </div>
 
             <div className="create">
-                <Button type="primary" loading={btnLoading} onClick={handleSubmit} className={form.showErrorIcon ? "error" : undefined} block>{form.showErrorIcon ? (<CloseOutlined />) : ("Create Account")}</Button>
+                <Button type="primary" loading={btnLoading} onClick={handleSubmit} className={form.showErrorIcon ? "error" : undefined} block data-testid="register_button">
+                    {form.showErrorIcon ? (<CloseOutlined />) : ("Create Account")}
+                </Button>
                 <p className="comment">Already Have an Account? <a onClick={() => navigate('/login')} className="link">Sign in now.</a></p>
             </div>
         </div>
