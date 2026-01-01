@@ -2,11 +2,35 @@ from django.test import TestCase
 from rest_framework.test import APIClient
 from django.urls import reverse
 from .models import Project
+from unittest.mock import patch, MagicMock
 
 
 class ProjectAPITestCase(TestCase):
 	def setUp(self):
 		self.client = APIClient()
+		# Mock the remote auth verification to accept any Bearer token
+		self.auth_patcher = patch('mService.remote_auth.requests.get')
+		self.mock_auth = self.auth_patcher.start()
+		
+		# Configure mock to return successful auth response
+		mock_response = MagicMock()
+		mock_response.status_code = 200
+		mock_response.json.return_value = {
+			'id': 1,
+			'username': 'testuser',
+			'email': 'test@example.com'
+		}
+		self.mock_auth.return_value = mock_response
+	
+	def tearDown(self):
+		self.auth_patcher.stop()
+	
+	def _add_auth_header(self, headers=None):
+		"""Helper to add Authorization header to requests"""
+		if headers is None:
+			headers = {}
+		headers['Authorization'] = 'Bearer test-token-12345'
+		return headers
 
 	def test_create_project_extracts_numeric_client_id(self):
 		url = reverse('project-list')
@@ -16,7 +40,7 @@ class ProjectAPITestCase(TestCase):
 				'test': 'something'
 			}
 		}
-		resp = self.client.post(url, payload, format='json')
+		resp = self.client.post(url, payload, format='json', **{'HTTP_AUTHORIZATION': 'Bearer test-token-12345'})
 		self.assertEqual(resp.status_code, 201)
 		# client_id should be present and stored (as string in the model)
 		self.assertIn('client_id', resp.data)
@@ -30,7 +54,7 @@ class ProjectAPITestCase(TestCase):
 		payload = {
 			'data': '{"user": {"id": "test123"}, "a": 1}'
 		}
-		resp = self.client.post(url, payload, format='json')
+		resp = self.client.post(url, payload, format='json', **{'HTTP_AUTHORIZATION': 'Bearer test-token-12345'})
 		self.assertEqual(resp.status_code, 201)
 		self.assertIn('client_id', resp.data)
 		self.assertEqual(resp.data['client_id'], 'test123')
@@ -45,7 +69,7 @@ class ProjectAPITestCase(TestCase):
 		Project.objects.create(name='p3', client_id='client-A', data={})
 
 		url = reverse('project-list') + '?client_id=client-A'
-		resp = self.client.get(url, format='json')
+		resp = self.client.get(url, format='json', **{'HTTP_AUTHORIZATION': 'Bearer test-token-12345'})
 		self.assertEqual(resp.status_code, 200)
 		# Only two projects should be returned for client-A
 		self.assertEqual(len(resp.data), 2)
@@ -54,8 +78,25 @@ class ProjectAPITestCase(TestCase):
 class CanvasAPITestCase(TestCase):
 	def setUp(self):
 		self.client = APIClient()
+		# Mock the remote auth verification to accept any Bearer token
+		self.auth_patcher = patch('mService.remote_auth.requests.get')
+		self.mock_auth = self.auth_patcher.start()
+		
+		# Configure mock to return successful auth response
+		mock_response = MagicMock()
+		mock_response.status_code = 200
+		mock_response.json.return_value = {
+			'id': 1,
+			'username': 'testuser',
+			'email': 'test@example.com'
+		}
+		self.mock_auth.return_value = mock_response
+		
 		# create a project to attach canvases to
 		self.project = Project.objects.create(name='canvas1', client_id='id1', data={})
+	
+	def tearDown(self):
+		self.auth_patcher.stop()
 
 	def test_create_canvas_and_retrieve(self):
 		url = reverse('canvas-list')
@@ -63,7 +104,7 @@ class CanvasAPITestCase(TestCase):
 			'project': self.project.id,
 			'data': {'stuff': [{'more stuff': 'the stuff inside the stuff'}]}
 		}
-		resp = self.client.post(url, payload, format='json')
+		resp = self.client.post(url, payload, format='json', **{'HTTP_AUTHORIZATION': 'Bearer test-token-12345'})
 		self.assertEqual(resp.status_code, 201)
 		self.assertIn('id', resp.data)
 		self.assertEqual(int(resp.data['project']), self.project.id)
@@ -78,7 +119,7 @@ class CanvasAPITestCase(TestCase):
 		Canvas.objects.create(project=other, data={})
 
 		url = reverse('canvas-list') + f'?project={self.project.id}'
-		resp = self.client.get(url, format='json')
+		resp = self.client.get(url, format='json', **{'HTTP_AUTHORIZATION': 'Bearer test-token-12345'})
 		self.assertEqual(resp.status_code, 200)
 		self.assertEqual(len(resp.data), 2)
 
@@ -86,7 +127,24 @@ class CanvasAPITestCase(TestCase):
 class SchemaAPITestCase(TestCase):
 	def setUp(self):
 		self.client = APIClient()
+		# Mock the remote auth verification to accept any Bearer token
+		self.auth_patcher = patch('mService.remote_auth.requests.get')
+		self.mock_auth = self.auth_patcher.start()
+		
+		# Configure mock to return successful auth response
+		mock_response = MagicMock()
+		mock_response.status_code = 200
+		mock_response.json.return_value = {
+			'id': 1,
+			'username': 'testuser',
+			'email': 'test@example.com'
+		}
+		self.mock_auth.return_value = mock_response
+		
 		self.project = Project.objects.create(name='schema1', client_id='id1', data={})
+	
+	def tearDown(self):
+		self.auth_patcher.stop()
 
 	def test_upload_schema_file(self):
 		url = reverse('schema-list')
@@ -97,7 +155,7 @@ class SchemaAPITestCase(TestCase):
 			'name': 'schemainitial',
 			'sql_file': file_data,
 		}
-		resp = self.client.post(url, payload, format='multipart')
+		resp = self.client.post(url, payload, format='multipart', **{'HTTP_AUTHORIZATION': 'Bearer test-token-12345'})
 		self.assertEqual(resp.status_code, 201)
 		self.assertIn('id', resp.data)
 		self.assertEqual(int(resp.data['project']), self.project.id)
@@ -112,6 +170,6 @@ class SchemaAPITestCase(TestCase):
 		Schema.objects.create(project=other, name='other', sql_file='schemas/other.sql')
 
 		url = reverse('schema-list') + f'?project={self.project.id}'
-		resp = self.client.get(url, format='json')
+		resp = self.client.get(url, format='json', **{'HTTP_AUTHORIZATION': 'Bearer test-token-12345'})
 		self.assertEqual(resp.status_code, 200)
 		self.assertEqual(len(resp.data), 2)

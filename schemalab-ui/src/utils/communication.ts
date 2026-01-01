@@ -1,4 +1,5 @@
 import axios, { AxiosPromise } from "axios";
+import { loginResult } from '../contexts/auth-context';
 
 interface ApiRequest<T> {
     code: number,
@@ -78,11 +79,13 @@ export const DELETE = <T>(service: Services, url?: string, message?: string, dat
 
 axios.interceptors.request.use(
     (config) => {
-        const user = localStorage.getItem("user");
-        const token = user ? JSON.parse(user).token : null;
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+            const user: loginResult = JSON.parse(storedUser);
 
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
+            if (user.access) {
+                config.headers.Authorization = `Bearer ${user.access}`;
+            }
         }
         return config;
     },
@@ -95,7 +98,7 @@ axios.interceptors.response.use(
         if (error.response?.status === 401) {
             // JWT has expired or is just invalid
             localStorage.removeItem("user");
-
+            window.dispatchEvent(new Event("auth:logout"));
             // WIP: redirect user to login screen
         }
 

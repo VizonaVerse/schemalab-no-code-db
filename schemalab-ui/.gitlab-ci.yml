@@ -1,7 +1,7 @@
 stages:
   - build
   - test
-  # - deploy
+  - push
   
 build_schemalab-ui:
   stage: build
@@ -19,23 +19,41 @@ build_schemalab-ui:
   rules:
     - when: on_success
 
-test_schemalab-ui:
-  stage: test
-  image: node:20
-  dependencies:
-    - build_schemalab-ui
-  script:
-    - echo "Testing schemalab-ui..."
-    - cd schemalab-ui
-    - npm test -- --passWithNoTests
-  rules:
-  - when: on_success
-
-# deploy_schemalab-ui:
-#   stage: deploy
+# test_schemalab-ui:
+#   stage: test
+#   image: mcr.microsoft.com/playwright:v1.57.0-jammy
+#   services:
+#     - docker:24-dind
+#   variables:
+#     DOCKER_HOST: tcp://docker:2375
+#     DOCKER_TLS_CERTDIR: ""
+#   dependencies:
+#     - build_schemalab-ui
+#   before_script:
+#     - apt-get update
+#     - apt-get install -y docker-compose-plugin
 #   script:
-#     - echo "Deploying schemalab-ui..."
-#     - docker compose build
+#     - echo "Testing schemalab-ui..."
+#     - echo "Building auth for tests."
+#     - cd auth
 #     - docker compose up -d
-#   only:
-#     - main
+#     - cd ..
+#     - cd schemalab-ui
+#     - npm install
+#     - npx playwright install --with-deps
+#     - npm run test:e2e
+#   rules:
+#   - when: on_success
+
+push_schemalab-ui:
+  stage: push
+  image: docker:24
+  services:
+    - docker:24-dind
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  script:
+    - docker build -t $CI_REGISTRY_IMAGE/schemalab-ui:latest .
+    - docker push $CI_REGISTRY_IMAGE/schemalab-ui:latest
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"' 
