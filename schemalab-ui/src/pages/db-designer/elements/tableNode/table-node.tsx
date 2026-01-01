@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect, useLayoutEffect, useCallback } from "react";
-import { Handle, Position, useViewport } from "reactflow";
+import { Handle, Position, useViewport, useUpdateNodeInternals } from "reactflow";
 import "reactflow/dist/style.css";
 import "./table-node.scss";
 import { useCanvasContext } from "../../../../contexts/canvas-context";
@@ -39,6 +39,29 @@ const TYPE_OPTIONS: string[] = [
   "DATETIME",
 ];
 
+function validateValueForType(value: string, type: string | undefined): boolean {
+  const base = (type || "").split("(")[0].trim().toUpperCase();
+
+  if (base === "BOOLEAN") {
+    return value === "1" || value === "0";
+  }
+
+  if (base === "DATE") {
+    // YYYY-MM-DD (basic validation)
+    const re = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
+    return re.test(value);
+  }
+
+  if (base === "DATETIME") {
+    // YYYY-MM-DD hh-mm-ss where time uses hyphens and a space separator
+    const re = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])\s([01]\d|2[0-3])-[0-5]\d-[0-5]\d$/;
+    return re.test(value);
+  }
+
+  // default: no restriction
+  return true;
+}
+
 export const TableNode = ({
   id,
   data,
@@ -52,6 +75,7 @@ export const TableNode = ({
   };
 }) => {
   const { mode, updateNodeData, selectedNodes, nodes, edges } = useCanvasContext();
+  const updateRfNodeInternals = useUpdateNodeInternals();
   const { zoom, x: viewportX, y: viewportY } = useViewport();
   const rowHeight = 28.5;
   const MAX_BUILD_ROWS = 7;
@@ -69,12 +93,18 @@ export const TableNode = ({
   const isSelected = selectedNodes?.some(n => n.id === id);
 
   const defaultMeta = (allTrue = false): RowMeta => ({
-    type: "INT", // Default type
+    type: "INT", // Data type (defaults to INT)
     nn: allTrue, // Not null
     pk: allTrue, // Primary key
     unique: allTrue, // Unique
     default: "", // Default value
   });
+
+  useLayoutEffect(() => {
+    // Ensure handles are measured after mount / row-count changes / mode toggles
+    const raf = requestAnimationFrame(() => updateRfNodeInternals(id));
+    return () => cancelAnimationFrame(raf);
+  }, [id, mode, data?.tableData?.length, updateRfNodeInternals]);
 
   // Sync rowMeta length with tableData length
   useEffect(() => {
@@ -98,10 +128,10 @@ export const TableNode = ({
       const next =
         prev.length > 0
           ? prev.map((row) => {
-              const resized = row.slice(0, targetCols);
-              while (resized.length < targetCols) resized.push("");
-              return resized;
-            })
+            const resized = row.slice(0, targetCols);
+            while (resized.length < targetCols) resized.push("");
+            return resized;
+          })
           : [Array.from({ length: targetCols }, () => "")];
 
       const changed =
@@ -137,6 +167,21 @@ export const TableNode = ({
   const handleDoubleClickDataModeCell = (rowIndex: number, colIndex: number) => {
     const newValue = prompt("Edit cell value:", dataModeRows[rowIndex][colIndex]);
     if (newValue !== null) {
+      const colType = rowMeta?.[colIndex]?.type || "";
+      if (!validateValueForType(newValue, colType)) {
+        const base = (colType || "").split("(")[0].toUpperCase() || "TEXT";
+        if (base === "BOOLEAN") {
+          alert("BOOLEAN values must be '1' or '0'.");
+        } else if (base === "DATE") {
+          alert("DATE must be in format YYYY-MM-DD.");
+        } else if (base === "DATETIME") {
+          alert("DATETIME must be in format YYYY-MM-DD hh-mm-ss (space between date and time).");
+        } else {
+          alert("Value does not match required format.");
+        }
+        return;
+      }
+
       const updatedRows = [...dataModeRows];
       updatedRows[rowIndex][colIndex] = newValue;
       setDataModeRows(updatedRows);
@@ -239,7 +284,7 @@ export const TableNode = ({
     setTableData(updatedTable);
     updateNodeData(id, { tableData: updatedTable, rowMeta, dataModeRows });
   };
-// If pk is selected, make it exclusive
+  // If pk is selected, make it exclusive
   const updateRowMeta = (rowIndex: number, patch: Partial<RowMeta>) => {
     setRowMeta((prev) => {
       const normalized = [...prev];
@@ -322,7 +367,8 @@ export const TableNode = ({
   useEffect(() => {
     attrCellRefs.current = attrCellRefs.current.slice(0, tableData.length);
     if (isBuildMode) {
-      requestAnimationFrame(() => measureHandleOffsets());
+      // run synchronously after DOM updates so refs are populated before measuring
+      measureHandleOffsets();
     }
   }, [tableData.length, isBuildMode, measureHandleOffsets]);
 
@@ -441,7 +487,7 @@ export const TableNode = ({
                     onClick={() => togglePopover(rowIndex)}
                     aria-expanded={openPopoverRow === rowIndex}
                   >
-                    {/* show the computed comma-separated checkbox labels (or empty) */}
+                    {/* show the computed checkbox labels (or empty) */}
                     {(() => {
                       const meta = rowMeta[rowIndex] || defaultMeta();
                       const labels: string[] = [];
@@ -483,31 +529,31 @@ export const TableNode = ({
                       {["DECIMAL", "CHARACTER", "VARCHAR", "NCHAR", "NVARCHAR"].includes(
                         rowMeta[rowIndex]?.type.split("(")[0]
                       ) && (
-                        <div className="popover-row">
-                          <label>
-                            {rowMeta[rowIndex]?.type.startsWith("DECIMAL")
-                              ? "Total digits, digits after decimal point"
-                              : "Length"}
-                          </label>
-                          <input
-                            type="text"
-                            placeholder={
-                              rowMeta[rowIndex]?.type.startsWith("DECIMAL")
-                                ? "e.g., 4,2"
-                                : "e.g., 255"
-                            }
-                            value={
-                              // Extract the parameters from the type string (e.g., "DECIMAL(4,2)" -> "4,2")
-                              rowMeta[rowIndex]?.type.match(/\(([^)]+)\)/)?.[1] || ""
-                            }
-                            onChange={(e) => {
-                              const baseType = rowMeta[rowIndex]?.type.split("(")[0]; // Extract the base type (e.g., "DECIMAL")
-                              const params = e.target.value; // Get the new parameters from the input
-                              updateRowMeta(rowIndex, { type: `${baseType}(${params})` }); // Update the type field directly
-                            }}
-                          />
-                        </div>
-                      )}
+                          <div className="popover-row">
+                            <label>
+                              {rowMeta[rowIndex]?.type.startsWith("DECIMAL")
+                                ? "Total digits, digits after decimal point"
+                                : "Length"}
+                            </label>
+                            <input
+                              type="text"
+                              placeholder={
+                                rowMeta[rowIndex]?.type.startsWith("DECIMAL")
+                                  ? "e.g., 4,2"
+                                  : "e.g., 255"
+                              }
+                              value={
+                                // Extract the parameters from the type string (e.g., "DECIMAL(4,2)" -> "4,2")
+                                rowMeta[rowIndex]?.type.match(/\(([^)]+)\)/)?.[1] || ""
+                              }
+                              onChange={(e) => {
+                                const baseType = rowMeta[rowIndex]?.type.split("(")[0]; // Extract the base type (e.g., "DECIMAL")
+                                const params = e.target.value; // Get the new parameters from the input
+                                updateRowMeta(rowIndex, { type: `${baseType}(${params})` }); // Update the type field directly
+                              }}
+                            />
+                          </div>
+                        )}
 
                       <div className="popover-row checkboxes">
                         <label>
@@ -540,7 +586,24 @@ export const TableNode = ({
                         <label>Default</label>
                         <input
                           value={rowMeta[rowIndex]?.default || ""}
-                          onChange={e => updateRowMeta(rowIndex, { default: e.target.value })}
+                          onChange={e => {
+                            const val = e.target.value;
+                            const colType = rowMeta[rowIndex]?.type || "";
+                            if (validateValueForType(val, colType)) {
+                              updateRowMeta(rowIndex, { default: val });
+                            } else {
+                              const base = (colType || "").split("(")[0].toUpperCase();
+                              if (base === "BOOLEAN") {
+                                alert("BOOLEAN default must be '1' or '0'.");
+                              } else if (base === "DATE") {
+                                alert("DATE default must be YYYY-MM-DD.");
+                              } else if (base === "DATETIME") {
+                                alert("DATETIME default must be YYYY-MM-DD hh-mm-ss.");
+                              } else {
+                                alert("Invalid default value.");
+                              }
+                            }
+                          }}
                           placeholder="e.g. 0"
                         />
                       </div>
