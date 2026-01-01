@@ -26,6 +26,10 @@ test_schemalab-ui:
     - build_schemalab-ui
   script:
     - echo "Testing schemalab-ui..."
+    - echo "Building auth for tests."
+    - cd auth
+    - docker compose up -d
+    - cd ..
     - cd schemalab-ui
     - npm install
     - npx playwright install --with-deps
