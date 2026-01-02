@@ -57,8 +57,8 @@ push_schemalab-ui:
       echo "{
         \"auths\":{
           \"$CI_REGISTRY\":{
-            \"username\": \"DEPLOY_USER",
-            \"password\": \"gldt-qTxTHP_t89XDyGuMNCxs"
+            \"username\": \"$REGISTRY_USER\",
+            \"password\": \"$REGISTRY_PASSWORD\"
           }
         }
       }" > /kaniko/.docker/config.json
