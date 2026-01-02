@@ -47,13 +47,13 @@ build_schemalab-ui:
 
 push_schemalab-ui:
   stage: push
-  image: docker:24
-  services:
-    - docker:24-dind
-  before_script:
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  image:
+    name: gcr.io/kaniko-project/executor:latest
+    entrypoint: [""]
   script:
-    - docker build -t $CI_REGISTRY_IMAGE/schemalab-ui:latest .
-    - docker push $CI_REGISTRY_IMAGE/schemalab-ui:latest
+    - /kaniko/executor
+      --context $CI_PROJECT_DIR
+      --dockerfile Dockerfile
+      --destination $CI_REGISTRY_IMAGE/schemalab-ui:latest
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"' 
