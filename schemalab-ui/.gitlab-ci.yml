@@ -48,7 +48,7 @@ build_schemalab-ui:
 push_schemalab-ui:
   stage: push
   image:
-    name: gcr.io/kaniko-project/executor:latest
+    name: gcr.io/kaniko-project/executor:debug
     entrypoint: [""]
   variables:
     DOCKER_CONFIG: /kaniko/.docker
