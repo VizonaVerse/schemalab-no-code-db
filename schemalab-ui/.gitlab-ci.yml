@@ -50,10 +50,16 @@ push_schemalab-ui:
   image:
     name: gcr.io/kaniko-project/executor:latest
     entrypoint: [""]
+  variables:
+    DOCKER_CONFIG: /kaniko/.docker
+  before_script:
+    - |
+      echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
   script:
-    - /kaniko/executor
-      --context $CI_PROJECT_DIR
-      --dockerfile Dockerfile
-      --destination $CI_REGISTRY_IMAGE/schemalab-ui:latest
+    - |
+      /kaniko/executor \
+        --context "${CI_PROJECT_DIR}" \
+        --dockerfile "${CI_PROJECT_DIR}/Dockerfile" \
+        --destination "${CI_REGISTRY_IMAGE}/schemalab-ui:latest"
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"' 
