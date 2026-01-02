@@ -58,8 +58,8 @@ push_schemalab-ui:
   script:
     - |
       /kaniko/executor \
-        --context "${CI_PROJECT_DIR}" \
-        --dockerfile "${CI_PROJECT_DIR}/Dockerfile" \
+        --context "${CI_PROJECT_DIR}/schemalab-ui" \
+        --dockerfile "${CI_PROJECT_DIR}/schemalab-ui/Dockerfile" \
         --destination "${CI_REGISTRY_IMAGE}/schemalab-ui:latest"
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"' 
