@@ -54,7 +54,7 @@ push_schemalab-ui:
     DOCKER_CONFIG: /kaniko/.docker
   before_script:
     - |
-      echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+      echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$gitlab-ci-token\",\"password\":\"$CI_JOB_TOKEN\"}}}" > /kaniko/.docker/config.json
   script:
     - |
       /kaniko/executor \
