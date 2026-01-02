@@ -54,12 +54,19 @@ push_schemalab-ui:
     DOCKER_CONFIG: /kaniko/.docker
   before_script:
     - |
-      echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$gitlab-ci-token\",\"password\":\"$CI_JOB_TOKEN\"}}}" > /kaniko/.docker/config.json
+      echo "{
+        \"auths\":{
+          \"$CI_REGISTRY\":{
+            \"username\": \"gitlab-ci-token\",
+            \"password\": \"$CI_JOB_TOKEN\"
+          }
+        }
+      }" > /kaniko/.docker/config.json
   script:
     - |
       /kaniko/executor \
         --context "${CI_PROJECT_DIR}/schemalab-ui" \
         --dockerfile "${CI_PROJECT_DIR}/schemalab-ui/Dockerfile" \
-        --destination "${CI_REGISTRY_IMAGE}/schemalab-ui:latest"
+        --destination "${CI_REGISTRY}/${CI_PROJECT_PATH}/schemalab-ui:latest"
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"' 
