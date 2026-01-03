@@ -45,3 +45,29 @@ deploy:
       when: always
     # Otherwise do not run
     - when: never
+
+push_management:
+  stage: push
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  variables:
+    DOCKER_CONFIG: /kaniko/.docker
+  before_script:
+    - |
+      echo "{
+        \"auths\":{
+          \"$CI_REGISTRY\":{
+            \"username\": \"$REGISTRY_USER\",
+            \"password\": \"$REGISTRY_PASSWORD\"
+          }
+        }
+      }" > /kaniko/.docker/config.json
+  script:
+    - |
+      /kaniko/executor \
+        --context "${CI_PROJECT_DIR}/management" \
+        --dockerfile "${CI_PROJECT_DIR}/management/Dockerfile" \
+        --destination "${CI_REGISTRY}/${CI_PROJECT_PATH}/management:latest"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"' 
