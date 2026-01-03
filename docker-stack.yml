@@ -26,7 +26,7 @@ services:
   schema:
     image: gitlab-registry.surrey.ac.uk/schemalab/no-code-db/schema:latest
     env_file:
-      - ./schemalab-ui/.env.production.local
+      - ./schema/.env.production
     networks:
       - app-network
     deploy:
