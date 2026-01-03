@@ -32,7 +32,7 @@ export const Login = () => {
         setForm(prev => ({ ... prev, [field]: value}));
     }
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!isEmailValid) {
             updateField("emailValid", false);
         }
@@ -49,8 +49,7 @@ export const Login = () => {
                 password: form.password,
                 // remember_me: form.remember_me,
             }
-            const result = login(loginObj);
-            console.log("result::", result);
+            const result = await login(loginObj);
             if (!result) {
                 setBtnLoading(false);
                 updateField("passwordValid", false);
