@@ -50,6 +50,7 @@ export const Login = () => {
                 // remember_me: form.remember_me,
             }
             const result = login(loginObj);
+            console.log("result::", result);
             if (!result) {
                 setBtnLoading(false);
                 updateField("passwordValid", false);
