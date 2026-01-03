@@ -13,7 +13,7 @@ services:
         condition: on-failure
 
   schemalabui:
-    image: nginx:alpine
+    image: gitlab-registry.surrey.ac.uk/schemalab/no-code-db/schemalab-ui:latest
     env_file:
       - ./schemalab-ui/.env.production
     networks:
@@ -24,7 +24,7 @@ services:
         condition: on-failure
         
   schema:
-    image: nginx:alpine
+    image: gitlab-registry.surrey.ac.uk/schemalab/no-code-db/schema:latest
     env_file:
       - ./schemalab-ui/.env.production.local
     networks:
@@ -35,7 +35,7 @@ services:
         condition: on-failure
   
   management:
-    image: nginx:alpine
+    image: gitlab-registry.surrey.ac.uk/schemalab/no-code-db/management
     env_file:
       - ./management/.env.production
     networks:
@@ -63,7 +63,7 @@ services:
         condition: on-failure
 
 auth:
-    image: nginx:alpine
+    image: gitlab-registry.surrey.ac.uk/schemalab/no-code-db/auth:latest
     command: >
       sh -c "sleep 5 && 
              python manage.py migrate --no-input && 
