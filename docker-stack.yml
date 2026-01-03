@@ -92,3 +92,7 @@ services:
 networks:
   app-network:
     driver: overlay
+
+volumes:
+  management_pgdata:
+  auth_db_data_prod:
