@@ -1,6 +1,8 @@
 trigger_management:
   image: alpine:3.18
-  stage: deploy
+  stages:
+    - deploy
+    - push
   script:
     - echo "Downstream pipeline running. CI_PIPELINE_SOURCE=$CI_PIPELINE_SOURCE"
   rules:
