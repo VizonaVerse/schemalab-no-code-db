@@ -62,6 +62,7 @@ services:
       image: gitlab-registry.surrey.ac.uk/schemalab/no-code-db/auth:latest
       command: >
         sh -c "sleep 5 && 
+               sed -i \"s/ALLOWED_HOSTS = .*/ALLOWED_HOSTS = ['*']/\" auth_project/settings.py &&
                python manage.py migrate --no-input && 
                python manage.py runserver 0.0.0.0:5050"
       environment:
