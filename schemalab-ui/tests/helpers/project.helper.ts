@@ -5,7 +5,7 @@ export type CreatedProject = {
     name: string;
 };
 
-const MANAGEMENT_API_BASE = process.env.MANAGEMENT_API_BASE ?? 'http://localhost:6060';
+const MANAGEMENT_API_BASE = process.env.MANAGEMENT_API_BASE;
 
 function buildProjectData(name: string) {
     return {
