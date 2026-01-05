@@ -49,10 +49,6 @@ services:
     image: postgres:16
     env_file:
       - ./management/.env.production
-    environment:
-      - POSTGRES_DB=${POSTGRES_DB}
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
       - management_pgdata:/var/lib/postgresql/data
     networks:
@@ -68,6 +64,12 @@ services:
         sh -c "sleep 5 && 
                python manage.py migrate --no-input && 
                python manage.py runserver 0.0.0.0:5050"
+      environment:
+        - DB_HOST=auth_db
+        - DB_NAME=auth_db
+        - DB_USER=myuser
+        - DB_PASSWORD=mypassword
+        - DB_PORT=5432
       networks:
         - app-network
       deploy:
