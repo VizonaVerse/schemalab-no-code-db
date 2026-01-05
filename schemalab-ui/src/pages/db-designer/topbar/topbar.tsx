@@ -36,7 +36,7 @@ export const Topbar = ({ projectName }: TopBarProps) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [inputName, setInputName] = useState(projectName); // <-- Use context value
     const navigate = useNavigate();
-    const schemaBaseUrl = process.env.REACT_APP_SCHEMA_URL ?? "http://localhost:7070/";
+    const schemaBaseUrl = process.env.REACT_APP_SCHEMA_URL;
     const location = useLocation();
     const { id: projectId } = useParams(); // <-- Get id from URL params
 
