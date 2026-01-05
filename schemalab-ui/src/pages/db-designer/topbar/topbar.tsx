@@ -72,7 +72,7 @@ export const Topbar = ({ projectName }: TopBarProps) => {
             try {
                 const formattedData = formatCanvasData(latestNodes, latestEdges, nameToSave);
                 await axios.put(
-                    `http://localhost:6060/api/projects/${projectId}/`,
+                    `${process.env.REACT_APP_MANAGEMENT_URL}/api/projects/${projectId}/`,
                     {
                         name: nameToSave,
                         data: formattedData,
@@ -121,7 +121,7 @@ export const Topbar = ({ projectName }: TopBarProps) => {
 
             if (projectId) {
                 await axios.put(
-                    `http://localhost:6060/api/projects/${projectId}/`,
+                    `${process.env.REACT_APP_MANAGEMENT_URL}/api/projects/${projectId}/`,
                     {
                         name: nameToSave,
                         data: formattedData,
@@ -130,7 +130,7 @@ export const Topbar = ({ projectName }: TopBarProps) => {
                 messageApi.success("Project updated successfully!");
             } else {
                 const { data: createdProject } = await axios.post(
-                    "http://localhost:6060/api/projects/",
+                    `${process.env.REACT_APP_MANAGEMENT_URL}/api/projects/`,
                     {
                         name: nameToSave,
                         data: formattedData,

@@ -27,7 +27,7 @@ export function DbDesigner({ example }: DbDesignerProps) {
 
             let projectData = location.state?.projectData;
             if (!projectData && projectId) {
-                const res = await axios.get(`http://localhost:6060/api/projects/${projectId}/`);
+                const res = await axios.get(`${process.env.REACT_APP_MANAGEMENT_URL}/api/projects/${projectId}/`);
                 projectData = res.data;
             }
             if (projectData && projectData.data && projectData.data.canvas) {
