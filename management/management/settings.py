@@ -75,6 +75,7 @@ MIDDLEWARE = [
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:8080",
     "http://localhost:3000",
+    "http://group14.com3033.csee-systems.com",
 ]
 ROOT_URLCONF = 'management.urls'
 
