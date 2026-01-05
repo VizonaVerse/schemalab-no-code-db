@@ -70,6 +70,7 @@ services:
         - DB_USER=myuser
         - DB_PASSWORD=mypassword
         - DB_PORT=5432
+        - ALLOWED_HOSTS=group14.com3033.csee-systems.com,localhost,127.0.0.1
       networks:
         - app-network
       deploy:
