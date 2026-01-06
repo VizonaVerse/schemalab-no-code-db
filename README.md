@@ -1,3 +1,7 @@
+## About this project
+
+This repository is a mirror of a group university project originally hosted on GitLab.
+
 # No-Code DB
 
 
