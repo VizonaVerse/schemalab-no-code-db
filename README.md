@@ -15,6 +15,11 @@ A no-code database tool developed as part of a university group project.
 Clone this repository and follow the setup instructions below:
 
 ```
-git clone https://gitlab.surrey.ac.uk/jp01821/no-code-db.git
+git clone https://github.com/VizonaVerse/schemalab-no-code-db.git
 ```
-Using VS Code's built-in Git fetaures is recommended for working with the project.
+Using VS Code's built-in Git features is recommended for working with the project.
+
+## Credits
+
+This project was developed as part of a group university module.
+All contributors are credited in the commit history.
