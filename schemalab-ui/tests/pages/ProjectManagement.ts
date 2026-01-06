@@ -65,7 +65,11 @@ export class ManagementPage {
 
     async settingsPopulateName(name: string) {
         await this.openSettings();
-        await this.page.fill('[data-testid="project-modal-name"]', name);
+        const [firstName = "", ...rest] = (name ?? "").split(" ");
+        const lastName = rest.join(" ");
+
+        await this.page.fill('[data-testid="project-modal-first_name"]', firstName);
+        await this.page.fill('[data-testid="project-modal-last_name"]', lastName);
     }
 
     // assumes settings is already open

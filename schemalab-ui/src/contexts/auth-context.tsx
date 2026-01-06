@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Spin, message } from 'antd';
 import { FullError } from "../utils/full-error";
 import { FullSuccess } from "../utils/full-success";
-import { GET, POST, DELETE, Services } from "../utils/communication";
+import { GET, POST, PATCH, DELETE, Services } from "../utils/communication";
 
 export type LoginType = {
     email: string;
@@ -26,7 +26,8 @@ export type RegisterType = {
 }
 
 export type UpdateName = {
-    name: string;
+    first_name: string;
+    last_name: string;
 }
 
 export type PasswordResetType = {
@@ -228,12 +229,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         try {
             setLoading(true);
             incrementPercent();
-            // const response = await POST(
-            //     Services.AUTH,
-            //     "/logout/",
-            //     "Logout Request",
-            //     user?.access,
-            // );
             incrementPercent();
             setUser(null);
             incrementPercent();
@@ -257,7 +252,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             if (auth) {
                 const response = await POST(
                     Services.AUTH,
-                    "/password/change/",
+                    "/password-change/",
                     "Change Password Request",
                     data
                 );
@@ -385,9 +380,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         incrementPercent();
         // send the request to auth service
         try {
-            const response = await POST(
+            const response = await PATCH(
                 Services.AUTH,
-                "/updateName",
+                "/me",
                 "Update name Request",
                 data
             );

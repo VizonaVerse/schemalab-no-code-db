@@ -4,7 +4,8 @@ import { useAuth, PasswordResetType, UpdateName } from '../contexts/auth-context
 import './authentication/authentication.scss';
 
 interface FormState {
-    name: string | undefined,
+    first_name: string | undefined,
+    last_name: string | undefined,
     oldPassword: string,
     newPassword: string,
     passwordConfirm: string,
@@ -21,9 +22,14 @@ export const SettingsModal = ({dataTestid}: SettingsProps) => {
     const [confirmLoading, setConfirmLoading] = useState(false);
     const [messageApi, contextHolder] = message.useMessage();
 
+    const [firstName = "", ...rest] = (user?.name ?? "").split(" ");
+    const lastName = rest.join(" ");
+
+
     // Data for inputs
     const [form, setForm] = useState<FormState>({
-        name: user?.name,
+        first_name: firstName,
+        last_name: lastName,
         oldPassword: "",
         newPassword: "",
         passwordConfirm: "",
@@ -40,16 +46,18 @@ export const SettingsModal = ({dataTestid}: SettingsProps) => {
 
     const handleNameUpdate = async () => {
         if (form.newPassword === form.passwordConfirm) {
-            if (!form.name) return error("Invalid name entered");
+            if (!form.first_name) return error("Invalid first name entered");
+            if (!form.last_name) return error("Invalid last name entered");
             const nameObj: UpdateName = {
-                name: form.name,
+                first_name: form.first_name,
+                last_name: form.last_name,
             }
             await updateName(nameObj);
             setConfirmLoading(false);
             success("Changes have applied successful");
             return setSettings(false);
         }
-        error("Error occurred.");
+        return error("Error occurred.");
     }
 
     const handlePasswordReset = async () => {
@@ -106,8 +114,12 @@ export const SettingsModal = ({dataTestid}: SettingsProps) => {
                 <div className="content">
                     <div className="name-change">
                         <div className="field">
-                            <p className="label">Name:</p>
-                            <Input className="input" value={form.name} onChange={e => { updateField("name", e.target.value); }} data-testid={`${dataTestid}-modal-name`}/>
+                            <p className="label">First Name:</p>
+                            <Input className="input" value={form.first_name} onChange={e => { updateField("first_name", e.target.value); }} data-testid={`${dataTestid}-modal-first_name`}/>
+                        </div>
+                        <div className="field">
+                            <p className="label">Last Name:</p>
+                            <Input className="input" value={form.last_name} onChange={e => { updateField("last_name", e.target.value); }} data-testid={`${dataTestid}-modal-last_name`}/>
                         </div>
                     </div>
                     <div className="reset">
