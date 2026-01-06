@@ -316,7 +316,7 @@ export const Topbar = ({ projectName }: TopBarProps) => {
         <div className="topbar">
             {contextHolder}
             <div className="topbar-start">
-                <a href="/home">
+                <a href="/projects">
                     <img src={Logo} alt="Schemalab Logo" className="logo" />
                 </a>
 
