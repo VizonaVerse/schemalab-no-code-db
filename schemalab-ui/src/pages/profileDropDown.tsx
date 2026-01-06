@@ -32,10 +32,12 @@ export const ProfileDropDown = ({dataTestid}: ProfileDropDownProps) => {
         }
     }
 
+    const name = user?.name;
+
     const items: MenuProps['items'] = [
         {
             key: '1',
-            label: <span data-testid={`${dataTestid}-dropdown-name`}>{user?.name}</span>,
+            label: <span data-testid={`${dataTestid}-dropdown-name`}>{name}</span>,
         },
         {
             key: '2',
