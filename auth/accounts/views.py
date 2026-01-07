@@ -181,14 +181,14 @@ class PasswordChangeView(APIView):
         serializer = PasswordChangeSerializer(data=payload)
         serializer.is_valid(raise_exception=True)
 
-        old_password = serializer.validated_data['old_password']
-        new_password = serializer.validated_data['new_password']
+        password_old = serializer.validated_data['password_old']
+        password_new = serializer.validated_data['password_new']
 
-        if not user.check_password(old_password):
+        if not user.check_password(password_old):
             return Response({'error': 'Old password is not correct.'}, 
                             status=status.HTTP_400_BAD_REQUEST)
 
-        user.set_password(new_password)
+        user.set_password(password_new)
         user.save()
         
         return Response({'message': 'Password updated successfully.'}, 

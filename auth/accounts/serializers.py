@@ -53,8 +53,8 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
     token = serializers.CharField(required=True)
 
 class PasswordChangeSerializer(serializers.Serializer):
-    old_password = serializers.CharField(required=True)
-    new_password = serializers.CharField(required=True, min_length=6)
+    password_old = serializers.CharField(required=True)
+    password_new = serializers.CharField(required=True, min_length=6)
 
     def validate_new_password(self, value):
         if len(value) < 6:
