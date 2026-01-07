@@ -11,8 +11,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
     serializer_class = ProjectSerializer
 
     def get_queryset(self):
-        """Allow filtering by client_id via ?client_id=..."""
-        qs = Project.objects.all().order_by('-created_at')
+        qs = Project.objects.filter(client_id=str(self.request.user.id)).order_by('-created_at')
         client_id = self.request.query_params.get('client_id')
         if client_id is not None:
             qs = qs.filter(client_id=client_id)
@@ -77,8 +76,7 @@ class CanvasViewSet(viewsets.ModelViewSet):
     serializer_class = CanvasSerializer
 
     def get_queryset(self):
-        """Allow filtering by project via ?project=..."""
-        qs = Canvas.objects.all().order_by('-updated_at')
+        qs = Canvas.objects.filter(project__client_id=str(self.request.user.id)).order_by('-updated_at')
         project = self.request.query_params.get('project')
         if project is not None:
             qs = qs.filter(project=project)
@@ -89,8 +87,7 @@ class SchemaViewSet(viewsets.ModelViewSet):
     serializer_class = SchemaSerializer
 
     def get_queryset(self):
-        """Allow filtering by project via ?project=..."""
-        qs = Schema.objects.all().order_by('-uploaded_at')
+        qs = Schema.objects.filter(project__client_id=str(self.request.user.id)).order_by('-uploaded_at')
         project = self.request.query_params.get('project')
         if project is not None:
             qs = qs.filter(project=project)
