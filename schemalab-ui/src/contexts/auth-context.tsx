@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { Spin, message } from 'antd';
 import { FullError } from "../utils/full-error";
 import { FullSuccess } from "../utils/full-success";
-import { GET, POST, PATCH, DELETE, Services } from "../utils/communication";
+import { GET, POST, DELETE, Services } from "../utils/communication";
+import axios from "axios";
 
 export type LoginType = {
     email: string;
@@ -31,8 +32,8 @@ export type UpdateName = {
 }
 
 export type PasswordResetType = {
-    password_old: string;
-    password_new: string;
+    old_password: string;
+    new_password: string;
 }
 
 export type PasswordLinkType = {
@@ -258,7 +259,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 );
                 incrementPercent();
                 incrementPercent();
-                navigate('/project');
                 incrementPercent();
                 endPercent();
                 setLoading(false);
@@ -375,19 +375,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         fetchProjects();
     }, []);
 
+    interface mePatchResponseProps {
+        first_name: string;
+        last_name: string;
+        email: string;
+    }
+
     const updateName = async (data: UpdateName) => {
         setLoading(true);
         incrementPercent();
         // send the request to auth service
         try {
-            const response = await PATCH(
-                Services.AUTH,
-                "/me/",
-                "Update name Request",
+            const response = await axios.patch<mePatchResponseProps>(
+                `${process.env.REACT_APP_AUTH_URL}/me/`,
                 data
             );
             incrementPercent();
-
+            if (user) {
+                const { first_name, last_name } = response.data;
+                const updated = {
+                    ...user,
+                    name: `${first_name} ${last_name}`
+                }
+                setUser(updated);
+                localStorage.setItem("user", JSON.stringify(updated));
+            }
             incrementPercent();
             incrementPercent();
             endPercent();
@@ -398,8 +410,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             displayError();
         }
     }
-
-    // const fetchName = async 
 
     return (
         <AuthContext.Provider value={{ user, login, register, logout, projects, loading, fetchProjects, deleteProject, resetPasswordAuthenticated, requestPasswordReset, resetPasswordConfirmation, settings, setSettings, updateName }}>
