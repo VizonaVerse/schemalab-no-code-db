@@ -31,8 +31,8 @@ export type UpdateName = {
 }
 
 export type PasswordResetType = {
-    password_old: string;
-    password_new: string;
+    old_password: string;
+    new_password: string;
 }
 
 export type PasswordLinkType = {
@@ -382,7 +382,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         try {
             const response = await PATCH(
                 Services.AUTH,
-                "/me",
+                "/me/",
                 "Update name Request",
                 data
             );

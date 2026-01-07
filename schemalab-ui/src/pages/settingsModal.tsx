@@ -68,8 +68,8 @@ export const SettingsModal = ({dataTestid}: SettingsProps) => {
 
         if (form.newPassword === form.passwordConfirm) {
             const passwordObj: PasswordResetType = {
-                password_old: form.oldPassword,
-                password_new: form.newPassword,
+                old_password: form.oldPassword,
+                new_password: form.newPassword,
                 // remember_me: form.remember_me,
             }
             await resetPasswordAuthenticated(passwordObj);
