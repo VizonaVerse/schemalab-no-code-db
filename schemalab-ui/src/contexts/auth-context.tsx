@@ -382,7 +382,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         try {
             const response = await PATCH(
                 Services.AUTH,
-                "/me",
+                "/me/",
                 "Update name Request",
                 data
             );
