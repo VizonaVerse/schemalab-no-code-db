@@ -1,10 +1,25 @@
-# No-Code DB
+## About this project
 
+This repository is a mirror of a group university project originally hosted on GitLab.
 
-## Set up reminder
-In case you don't remember how this is done (:
+In this project, I was primarily responsible for:
+- Front-end development
+- Integrating and connecting back-end microservices to the front end
+
+## No-Code DB
+
+A no-code database tool developed as part of a university group project.
+
+## Setup
+
+Clone this repository and follow the setup instructions below:
 
 ```
-git clone https://gitlab.surrey.ac.uk/jp01821/no-code-db.git
+git clone https://github.com/VizonaVerse/schemalab-no-code-db.git
 ```
-Use the vscode git feature to make your life easier after this
+Using VS Code's built-in Git features is recommended for working with the project.
+
+## Credits
+
+This project was developed as part of a group university module.
+All contributors are credited in the commit history.
